@@ -30,7 +30,7 @@ jobs:
         run: |
           pipx install poetry==${{ steps.poetry.outputs.poetry_version }}
           pip install nox
-          poetry install --with dev --no-interaction
+          uv pip install -r requirements.lock.txt
       - name: 🏗️ Build Docs via Nox
         run: |-
           echo "🧾 Building docs for ${{ steps.poetry.outputs.name }} v${{ steps.poetry.outputs.version }}"
