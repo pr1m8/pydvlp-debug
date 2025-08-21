@@ -738,3 +738,24 @@ tests/dev/
 # Claude AI temporary files
 .claude/settings.local.json.tmp.*
 .claude/settings.local.json.tmp.*/
+# PDM / Python env markers
+.pdm-python
+.python-version
+
+# Build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# IDE / Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Optional: if not using
+# requirements.lock.txt
+# uv.lock
