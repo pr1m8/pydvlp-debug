@@ -36,8 +36,8 @@ Examples:
 
 from __future__ import annotations
 
-from haive.core.utils.debugkit.benchmarking.load import load_tester
-from haive.core.utils.debugkit.benchmarking.timing import timing_benchmark
+from pydvlp.debug.benchmarking.load import load_tester
+from pydvlp.debug.benchmarking.timing import timing_benchmark
 
 
 class BenchmarkUtilities:

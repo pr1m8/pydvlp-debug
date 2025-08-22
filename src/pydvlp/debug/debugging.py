@@ -32,10 +32,10 @@ Examples:
 
 from __future__ import annotations
 
-from haive.core.utils.debugkit.debug.decorators import debug_decorators
-from haive.core.utils.debugkit.debug.enhanced import enhanced_debugger
-from haive.core.utils.debugkit.debug.inspection import debug_inspector
-from haive.core.utils.debugkit.debug.interactive import interactive_debugger
+from pydvlp.debug.decorators import debug_decorators
+from pydvlp.debug.enhanced import enhanced_debugger
+from pydvlp.debug.inspection import debug_inspector
+from pydvlp.debug.interactive import interactive_debugger
 
 
 class DebugUtilities:

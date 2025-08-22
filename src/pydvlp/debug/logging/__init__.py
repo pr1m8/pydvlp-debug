@@ -7,9 +7,9 @@ IDs, context management, and rich output formatting.
 from __future__ import annotations
 
 try:
-    from haive.core.utils.debugkit.logging.structured import StructuredLog
+    from pydvlp.debug.logging.structured import StructuredLog
 except ImportError:
-    from haive.core.utils.debugkit.fallbacks import FallbackLog as StructuredLog
+    from pydvlp.debug.fallbacks import FallbackLog as StructuredLog
 
 # Create default log instance
 log = StructuredLog()

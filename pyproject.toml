@@ -94,7 +94,7 @@ dependencies = [
   "referencing==0.36.2 ; python_full_version == '3.12.*'",
   "requests==2.32.4 ; python_full_version == '3.12.*'",
   "requests-toolbelt==1.0.0 ; python_full_version == '3.12.*'",
-  "rich==14.1.0 ; python_full_version == '3.12.*'",
+  "rich>=14.1.0",
   "rpds-py==0.26.0 ; python_full_version == '3.12.*'",
   "six==1.17.0 ; python_full_version == '3.12.*'",
   "smmap==5.0.2 ; python_full_version == '3.12.*'",
@@ -112,6 +112,13 @@ dependencies = [
   "watchdog==6.0.0 ; python_full_version == '3.12.*' and sys_platform != 'darwin'",
   "xxhash==3.5.0 ; python_full_version == '3.12.*'",
   "zstandard==0.23.0 ; python_full_version == '3.12.*'",
+  "line-profiler>=5.0.0",
+  "memory-profiler>=0.61.0",
+  "pyinstrument>=5.1.1",
+  "pyspy>=0.1.1",
+  "scalene>=1.5.53",
+  "psutil>=7.0.0",
+  "icecream>=2.1.7",
 ]
 
 [tool.pdm]

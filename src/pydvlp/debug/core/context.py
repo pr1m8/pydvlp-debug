@@ -10,7 +10,7 @@ import time
 import uuid
 from typing import Any
 
-from haive.core.utils.debugkit.config import config
+from pydvlp.debug.config import config
 
 
 class DevContext:
@@ -70,8 +70,8 @@ class DevContext:
         self.start_time = time.time()
 
         # Import here to avoid circular imports
-        from haive.core.utils.debugkit.logging import log
-        from haive.core.utils.debugkit.tracing import trace
+        from pydvlp.debug.logging import log
+        from pydvlp.debug.tracing import trace
 
         # Set correlation ID in components
         if hasattr(log, "set_correlation_id"):
@@ -98,8 +98,8 @@ class DevContext:
         duration = time.time() - self.start_time if self.start_time else 0.0
 
         # Import here to avoid circular imports
-        from haive.core.utils.debugkit.logging import log
-        from haive.core.utils.debugkit.tracing import trace
+        from pydvlp.debug.logging import log
+        from pydvlp.debug.tracing import trace
 
         # Log context exit
         if config.log_enabled:
@@ -132,7 +132,7 @@ class DevContext:
             **kwargs: Additional context data
         """
         if config.debug_enabled:
-            from haive.core.utils.debugkit.debug import debug
+            from pydvlp.debug import debug
 
             debug.ice(
                 f"[{self.name}] {message}",
@@ -148,7 +148,7 @@ class DevContext:
             **kwargs: Additional context data
         """
         if config.log_enabled:
-            from haive.core.utils.debugkit.logging import log
+            from pydvlp.debug.logging import log
 
             log.info(
                 f"[{self.name}] {message}",
@@ -164,7 +164,7 @@ class DevContext:
             **kwargs: Additional context data
         """
         if config.log_enabled:
-            from haive.core.utils.debugkit.logging import log
+            from pydvlp.debug.logging import log
 
             log.success(
                 f"[{self.name}] {message}",
@@ -180,7 +180,7 @@ class DevContext:
             **kwargs: Additional context data
         """
         if config.log_enabled:
-            from haive.core.utils.debugkit.logging import log
+            from pydvlp.debug.logging import log
 
             log.error(
                 f"[{self.name}] {message}",
@@ -207,7 +207,7 @@ class DevContext:
         self._checkpoints.append(checkpoint_data)
 
         if config.trace_enabled:
-            from haive.core.utils.debugkit.tracing import trace
+            from pydvlp.debug.tracing import trace
 
             if hasattr(trace, "mark"):
                 trace.mark(f"{self.name}.{checkpoint_name}", elapsed)

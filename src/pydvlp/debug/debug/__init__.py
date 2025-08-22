@@ -7,22 +7,22 @@ variable inspection, interactive debugging, and decorators.
 from __future__ import annotations
 
 try:
-    from haive.core.utils.debugkit.debug.enhanced import EnhancedDebug
+    from pydvlp.debug.enhanced import EnhancedDebug
 except ImportError:
-    from haive.core.utils.debugkit.fallbacks import FallbackDebug as EnhancedDebug
+    from pydvlp.debug.fallbacks import FallbackDebug as EnhancedDebug
 
 try:
-    from haive.core.utils.debugkit.debug.decorators import debug_decorators
+    from pydvlp.debug.decorators import debug_decorators
 except ImportError:
     debug_decorators = None
 
 try:
-    from haive.core.utils.debugkit.debug.inspection import variable_inspector
+    from pydvlp.debug.inspection import variable_inspector
 except ImportError:
     variable_inspector = None
 
 try:
-    from haive.core.utils.debugkit.debug.interactive import interactive_debugger
+    from pydvlp.debug.interactive import interactive_debugger
 except ImportError:
     interactive_debugger = None
 

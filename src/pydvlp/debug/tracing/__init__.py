@@ -7,9 +7,9 @@ tracing, performance measurement, and distributed tracing support.
 from __future__ import annotations
 
 try:
-    from haive.core.utils.debugkit.tracing.execution import ExecutionTrace
+    from pydvlp.debug.tracing.execution import ExecutionTrace
 except ImportError:
-    from haive.core.utils.debugkit.fallbacks import FallbackTrace as ExecutionTrace
+    from pydvlp.debug.fallbacks import FallbackTrace as ExecutionTrace
 
 # Create default trace instance
 trace = ExecutionTrace()

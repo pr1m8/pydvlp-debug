@@ -7,11 +7,9 @@ profiling, memory profiling, and statistical analysis.
 from __future__ import annotations
 
 try:
-    from haive.core.utils.debugkit.profiling.performance import PerformanceProfiler
+    from pydvlp.debug.profiling.performance import PerformanceProfiler
 except ImportError:
-    from haive.core.utils.debugkit.fallbacks import (
-        FallbackProfile as PerformanceProfiler,
-    )
+    from pydvlp.debug.fallbacks import FallbackProfile as PerformanceProfiler
 
 # Create default profile instance
 profile = PerformanceProfiler()

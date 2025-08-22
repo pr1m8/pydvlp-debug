@@ -13,24 +13,24 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from haive.core.utils.debugkit.analysis import (
+from pydvlp.debug.analysis import (
     get_complexity_analyzer,
     get_static_orchestrator,
     get_type_analyzer,
 )
-from haive.core.utils.debugkit.config import config
-from haive.core.utils.debugkit.core.context import DevContext
+from pydvlp.debug.config import config
+from pydvlp.debug.core.context import DevContext
 
 if TYPE_CHECKING:
-    from haive.core.utils.debugkit.analysis.complexity import (
+    from pydvlp.debug.analysis.complexity import (
         ComplexityAnalyzer,
         ComplexityReport,
     )
-    from haive.core.utils.debugkit.analysis.static import (
+    from pydvlp.debug.analysis.static import (
         AnalysisResult,
         StaticAnalysisOrchestrator,
     )
-    from haive.core.utils.debugkit.analysis.types import (
+    from pydvlp.debug.analysis.types import (
         FunctionTypeAnalysis,
         TypeAnalyzer,
     )
@@ -222,11 +222,11 @@ class UnifiedDev:
         Args:
             custom_config: Custom configuration (uses global config if None)
         """
-        from haive.core.utils.debugkit.benchmarking import benchmark
-        from haive.core.utils.debugkit.debug import debug
-        from haive.core.utils.debugkit.logging import log
-        from haive.core.utils.debugkit.profiling import profile
-        from haive.core.utils.debugkit.tracing import trace
+        from pydvlp.debug import debug
+        from pydvlp.debug.benchmarking import benchmark
+        from pydvlp.debug.logging import log
+        from pydvlp.debug.profiling import profile
+        from pydvlp.debug.tracing import trace
 
         self.config = custom_config or config
 

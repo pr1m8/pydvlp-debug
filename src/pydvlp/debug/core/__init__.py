@@ -6,8 +6,8 @@ UnifiedDev, and CodeAnalysisReport.
 
 from __future__ import annotations
 
-from haive.core.utils.debugkit.core.context import DevContext
-from haive.core.utils.debugkit.core.unified import CodeAnalysisReport, UnifiedDev
+from pydvlp.debug.core.context import DevContext
+from pydvlp.debug.core.unified import CodeAnalysisReport, UnifiedDev
 
 __all__ = [
     "CodeAnalysisReport",
