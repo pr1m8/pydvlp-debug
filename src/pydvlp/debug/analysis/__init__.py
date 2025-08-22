@@ -38,7 +38,6 @@ def get_type_analyzer() -> TypeAnalyzer:
     global _type_analyzer
     if _type_analyzer is None:
         from haive.core.utils.debugkit.config import config
-
         from pydvlp_debug.analysis.types import TypeAnalyzer
 
         _type_analyzer = TypeAnalyzer(

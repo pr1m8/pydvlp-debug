@@ -863,7 +863,6 @@ class ComplexityAnalyzer:
         """Find specific complexity hotspots in the code."""
 
         class HotspotFinder(ast.NodeVisitor):
-
             def __init__(self):
                 self.hotspots = []
                 self.nesting_level = 0
