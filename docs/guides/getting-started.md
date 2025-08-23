@@ -110,9 +110,9 @@ pip install "pydvlp-debug[all]"
 
 ## Next Steps
 
-- [Configuration Guide](configuration.md) - Customize PyDvlp Debug
-- [API Reference](../api/index.md) - Detailed documentation
-- [Best Practices](best-practices.md) - Tips and patterns
+- [Configuration Guide](../configuration/) - Customize PyDvlp Debug
+- [API Reference](../../api/) - Detailed documentation
+- [Best Practices](../best-practices/) - Tips and patterns
 
 ## Need Help?
 
