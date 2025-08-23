@@ -1,9 +1,10 @@
----
 name: Trigger Read the Docs
 
 on:
   push:
     branches: [main, develop]
+    tags:
+      - 'v*'  # Trigger on version tags
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
@@ -13,7 +14,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'CHANGELOG.md'
   release:
-    types: [published]
+    types: [published, prereleased]
   workflow_dispatch:
 
 jobs:
@@ -21,30 +22,81 @@ jobs:
     name: Trigger Read the Docs Build
     runs-on: ubuntu-latest
     steps:
-      - name: 🔔 Trigger Read the Docs webhook
-        if: secrets.RTD_WEBHOOK_URL
+      - name: Determine build target
+        id: target
         run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            # Extract tag name for version builds
+            TAG=${GITHUB_REF#refs/tags/}
+            echo "build_ref=$TAG" >> $GITHUB_OUTPUT
+            echo "build_type=tag" >> $GITHUB_OUTPUT
+            echo "Building documentation for tag: $TAG"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            # Use tag name from release
+            echo "build_ref=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "build_type=release" >> $GITHUB_OUTPUT
+            echo "Building documentation for release: ${{ github.event.release.tag_name }}"
+          else
+            # Use branch name for regular pushes
+            echo "build_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "build_type=branch" >> $GITHUB_OUTPUT
+            echo "Building documentation for branch: ${{ github.ref_name }}"
+          fi
+
+      - name: Trigger Read the Docs webhook
+        if: secrets.RTD_WEBHOOK_URL && secrets.RTD_WEBHOOK_TOKEN
+        run: |
+          echo "🔔 Triggering RTD build for: ${{ steps.target.outputs.build_ref }}"
+          
           curl -X POST \
             -H "Content-Type: application/json" \
-            -d '{"branches": ["${{ github.ref_name }}"], "token": "${{ secrets.RTD_WEBHOOK_TOKEN }}"}' \
+            -d "{\"branches\": [\"${{ steps.target.outputs.build_ref }}\"], \"token\": \"${{ secrets.RTD_WEBHOOK_TOKEN }}\"}" \
             "${{ secrets.RTD_WEBHOOK_URL }}"
+          
+          # For releases/tags, also trigger main to update "latest"
+          if [[ "${{ steps.target.outputs.build_type }}" == "tag" || "${{ steps.target.outputs.build_type }}" == "release" ]]; then
+            echo "🔄 Also triggering main branch to update latest docs"
+            curl -X POST \
+              -H "Content-Type: application/json" \
+              -d "{\"branches\": [\"main\"], \"token\": \"${{ secrets.RTD_WEBHOOK_TOKEN }}\"}" \
+              "${{ secrets.RTD_WEBHOOK_URL }}"
+          fi
         continue-on-error: true
 
-      - name: 📝 Manual RTD setup notice
-        if: success() && !secrets.RTD_WEBHOOK_URL
+      - name: RTD setup instructions
+        if: '!secrets.RTD_WEBHOOK_URL'
         run: |
-          echo "::notice::Read the Docs webhook not configured yet."
-          echo "::notice::To set up automatic builds:"
-          echo "::notice::1. Go to https://readthedocs.org/dashboard/"
-          echo "::notice::2. Import this project: https://github.com/pr1m8/pydvlp-debug"
-          echo "::notice::3. Add webhook URL and token as repository secrets:"
-          echo "::notice::   - RTD_WEBHOOK_URL"
-          echo "::notice::   - RTD_WEBHOOK_TOKEN"
-          echo "::notice::Documentation will be available at: https://pydvlp-debug.readthedocs.io/"
+          echo "🔧 Read the Docs Setup Required"
+          echo "=========================================="
+          echo ""
+          echo "To enable automatic documentation builds:"
+          echo ""
+          echo "1. 🌐 Go to https://readthedocs.org/dashboard/"
+          echo "2. 📥 Import project: https://github.com/${{ github.repository }}"
+          echo "3. ⚙️  Go to Admin > Integrations"
+          echo "4. 🔗 Add GitHub webhook integration"
+          echo "5. 📋 Copy the webhook URL and token"
+          echo "6. 🔐 Add GitHub repository secrets:"
+          echo "   - RTD_WEBHOOK_URL: https://readthedocs.org/api/v2/webhook/pydvlp-debug/[ID]/"
+          echo "   - RTD_WEBHOOK_TOKEN: [your-token-here]"
+          echo ""
+          echo "📚 After setup, docs will be available at:"
+          echo "   - Latest: https://pydvlp-debug.readthedocs.io/en/latest/"
+          if [[ "${{ steps.target.outputs.build_type }}" == "tag" || "${{ steps.target.outputs.build_type }}" == "release" ]]; then
+            echo "   - Version: https://pydvlp-debug.readthedocs.io/en/${{ steps.target.outputs.build_ref }}/"
+          fi
 
-      - name: 📊 Repository info
+      - name: Build summary
         run: |
+          echo "📊 Build Summary"
+          echo "================="
           echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
           echo "Event: ${{ github.event_name }}"
+          echo "Build target: ${{ steps.target.outputs.build_ref }} (${{ steps.target.outputs.build_type }})"
+          echo "Commit: ${{ github.sha }}"
+          
+          if [[ "${{ secrets.RTD_WEBHOOK_URL }}" ]]; then
+            echo "Status: ✅ Webhook triggered"
+          else
+            echo "Status: ⚠️  Manual setup required"
+          fi
