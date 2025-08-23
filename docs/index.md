@@ -50,16 +50,16 @@ debugkit.ice("Hello PyDvlp Debug!")
 
 <div class="grid cards" markdown>
 
-- **[Getting Started](guides/getting-started/)**  
+- **[Getting Started](guides/getting-started)**  
   Installation and first steps
 
 - **[API Reference](api/)**  
   Complete API documentation
 
-- **[Configuration](guides/configuration/)**  
+- **[Configuration](guides/configuration)**  
   Customize behavior and settings
 
-- **[Best Practices](guides/best-practices/)**  
+- **[Best Practices](guides/best-practices)**  
   Tips for effective usage
 
 </div>
