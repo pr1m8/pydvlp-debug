@@ -34,9 +34,7 @@ class DebugDecorators:
             except Exception:
                 if self.debug_enabled:
                     # Import here to avoid circular imports
-                    from haive.core.utils.dev.debug_interactive import (
-                        interactive_debugger,
-                    )
+                    from pydvlp.debug.debug.interactive import interactive_debugger
 
                     interactive_debugger.pdb()
                 raise

@@ -9,6 +9,7 @@ import statistics
 import threading
 import time
 from collections.abc import Callable
+from typing import Any
 
 try:
     from rich.console import Console
@@ -33,11 +34,13 @@ class LoadTester:
         duration_seconds: int = 60,
         ramp_up_seconds: int = 10,
         **kwargs,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """Perform load testing with concurrent users."""
         if HAS_RICH and self.console:
             self.console.print(
-                f"🔥 Load Testing {func.__name__} ({concurrent_users} users, {duration_seconds}s)",
+                f"🔥 Load Testing {func.__name__} ({concurrent_users} users, {
+                    duration_seconds
+                }s)",
                 style="bold red",
             )
 
@@ -105,11 +108,11 @@ class LoadTester:
                 "failed_requests": failed_count,
                 "total_requests": total_requests,
                 "throughput": (
-                    total_requests / total_duration if total_duration > 0 else 0
-                ),
+                    total_requests /
+                    total_duration if total_duration > 0 else 0),
                 "error_rate": (
-                    failed_count / total_requests if total_requests > 0 else 0
-                ),
+                    failed_count /
+                    total_requests if total_requests > 0 else 0),
             },
         )
 
@@ -134,7 +137,7 @@ class LoadTester:
         self._display_load_test_results(results)
         return results
 
-    def _display_load_test_results(self, results: dict[str, any]) -> None:
+    def _display_load_test_results(self, results: dict[str, Any]) -> None:
         """Display load test results."""
         if HAS_RICH and self.console:
             table = Table(title=f"🔥 Load Test Results: {results['function']}")
@@ -151,7 +154,10 @@ class LoadTester:
 
             if "stats" in results:
                 stats = results["stats"]
-                table.add_row("Mean Response", f"{stats['mean_response_time']:.3f}s")
+                table.add_row(
+                    "Mean Response",
+                    f"{stats['mean_response_time']:.3f}s",
+                )
                 table.add_row("95th Percentile", f"{stats['p95']:.3f}s")
                 table.add_row("99th Percentile", f"{stats['p99']:.3f}s")
 
@@ -165,10 +171,13 @@ class LoadTester:
         spike_users: int = 50,
         spike_duration: int = 30,
         **kwargs,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """Perform spike testing with sudden load increases."""
         if HAS_RICH and self.console:
-            self.console.print(f"⚡ Spike Testing {func.__name__}", style="bold yellow")
+            self.console.print(
+                f"⚡ Spike Testing {func.__name__}",
+                style="bold yellow",
+            )
 
         # Phase 1: Base load
         base_results = self.load_test(

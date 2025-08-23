@@ -738,6 +738,7 @@ tests/dev/
 # Claude AI temporary files
 .claude/settings.local.json.tmp.*
 .claude/settings.local.json.tmp.*/
+CLAUDE.md
 # PDM / Python env markers
 .pdm-python
 .python-version

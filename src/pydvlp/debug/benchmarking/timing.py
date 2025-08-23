@@ -8,6 +8,7 @@ from __future__ import annotations
 import statistics
 import time
 from collections.abc import Callable
+from typing import Any
 
 try:
     from rich.console import Console
@@ -108,7 +109,7 @@ class TimingBenchmark:
         self._display_timing_results(stats)
         return stats
 
-    def _display_timing_results(self, stats: dict[str, any]) -> None:
+    def _display_timing_results(self, stats: dict[str, Any]) -> None:
         """Display timing results in a formatted table."""
         if HAS_RICH and self.console:
             table = Table(title=f"⏱️  Timing Results: {stats['function']}")

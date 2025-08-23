@@ -13,6 +13,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: debug-statements
+        exclude: src/pydvlp/debug/(debug/interactive\.py|fallbacks\.py)$
       - id: double-quote-string-fixer
       - id: name-tests-test
       - id: requirements-txt-fixer
@@ -142,6 +143,7 @@ repos:
         name: Check Merge Conflicts
       - id: debug-statements
         name: Check Debug Statements
+        exclude: src/pydvlp/debug/(debug/interactive\.py|fallbacks\.py)$
 
   # 🛠️ Custom Haive Dev-Tools Integration
   - repo: local

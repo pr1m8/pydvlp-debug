@@ -128,7 +128,7 @@ class ComplexityMetrics:
     # Core complexity metrics
     cyclomatic_complexity: int = 0
     cognitive_complexity: int = 0
-    halstead_metrics: dict[str, float] = None
+    halstead_metrics: dict[str, float] | None = None
     maintainability_index: float = 0.0
 
     # Code size metrics
@@ -199,7 +199,8 @@ class ComplexityMetrics:
             "cyclomatic": min(25, (self.cyclomatic_complexity / 20) * 25),
             "cognitive": min(25, (self.cognitive_complexity / 30) * 25),
             "nesting": min(25, (self.nesting_depth / 8) * 25),
-            "maintainability": max(0, 25 * (1 - self.maintainability_index / 100)),
+            "maintainability":
+            max(0, 25 * (1 - self.maintainability_index / 100)),
             "structure": min(25, (self.parameter_count / 10) * 25),
         }
 
@@ -229,7 +230,7 @@ class ComplexityHotspot:
     description: str
     severity: str = "medium"
     suggestion: str = ""
-    context: dict[str, Any] = None
+    context: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         """Initialize context dictionary."""
@@ -279,16 +280,16 @@ class ComplexityReport:
 
     function_name: str
     module_name: str | None = None
-    metrics: ComplexityMetrics = None
+    metrics: ComplexityMetrics | None = None
     complexity_grade: ComplexityGrade = ComplexityGrade.C
-    grade_breakdown: dict[str, str] = None
-    refactoring_suggestions: list[str] = None
-    hotspots: list[ComplexityHotspot] = None
+    grade_breakdown: dict[str, str] | None = None
+    refactoring_suggestions: list[str] | None = None
+    hotspots: list[ComplexityHotspot] | None = None
     risk_score: float = 0.0
     maintainability_score: float = 50.0
     testability_score: float = 50.0
     analysis_timestamp: str | None = None
-    thresholds_exceeded: list[str] = None
+    thresholds_exceeded: list[str] | None = None
 
     def __post_init__(self) -> None:
         """Initialize default values for complex fields."""
@@ -310,19 +311,28 @@ class ComplexityReport:
             Dict[str, Any]: Summary containing key metrics and assessments
         """
         return {
-            "function_name": self.function_name,
-            "overall_grade": self.complexity_grade.value,
-            "risk_score": self.risk_score,
-            "maintainability_score": self.maintainability_score,
-            "cyclomatic_complexity": self.metrics.cyclomatic_complexity,
-            "cognitive_complexity": self.metrics.cognitive_complexity,
-            "lines_of_code": self.metrics.lines_of_code,
-            "suggestion_count": len(self.refactoring_suggestions),
-            "hotspot_count": len(self.hotspots),
-            "critical_hotspots": len(
-                [h for h in self.hotspots if h.severity == "critical"],
-            ),
-            "thresholds_exceeded": self.thresholds_exceeded.copy(),
+            "function_name":
+            self.function_name,
+            "overall_grade":
+            self.complexity_grade.value,
+            "risk_score":
+            self.risk_score,
+            "maintainability_score":
+            self.maintainability_score,
+            "cyclomatic_complexity":
+            self.metrics.cyclomatic_complexity,
+            "cognitive_complexity":
+            self.metrics.cognitive_complexity,
+            "lines_of_code":
+            self.metrics.lines_of_code,
+            "suggestion_count":
+            len(self.refactoring_suggestions),
+            "hotspot_count":
+            len(self.hotspots),
+            "critical_hotspots":
+            len([h for h in self.hotspots if h.severity == "critical"], ),
+            "thresholds_exceeded":
+            self.thresholds_exceeded.copy(),
         }
 
     def needs_refactoring(self) -> bool:
@@ -334,8 +344,7 @@ class ComplexityReport:
         return (
             self.complexity_grade in [ComplexityGrade.D, ComplexityGrade.F]
             or self.risk_score > 75
-            or len([h for h in self.hotspots if h.severity == "critical"]) > 0
-        )
+            or len([h for h in self.hotspots if h.severity == "critical"]) > 0)
 
 
 class ComplexityAnalyzer:
@@ -406,12 +415,42 @@ class ComplexityAnalyzer:
 
         # Default thresholds
         self.thresholds = {
-            "cyclomatic": {"low": 5, "medium": 10, "high": 20, "critical": 30},
-            "cognitive": {"low": 7, "medium": 15, "high": 25, "critical": 40},
-            "nesting": {"low": 3, "medium": 4, "high": 6, "critical": 8},
-            "parameters": {"low": 3, "medium": 5, "high": 8, "critical": 12},
-            "length": {"low": 25, "medium": 50, "high": 100, "critical": 200},
-            "maintainability": {"excellent": 85, "good": 70, "fair": 50, "poor": 25},
+            "cyclomatic": {
+                "low": 5,
+                "medium": 10,
+                "high": 20,
+                "critical": 30,
+            },
+            "cognitive": {
+                "low": 7,
+                "medium": 15,
+                "high": 25,
+                "critical": 40,
+            },
+            "nesting": {
+                "low": 3,
+                "medium": 4,
+                "high": 6,
+                "critical": 8,
+            },
+            "parameters": {
+                "low": 3,
+                "medium": 5,
+                "high": 8,
+                "critical": 12,
+            },
+            "length": {
+                "low": 25,
+                "medium": 50,
+                "high": 100,
+                "critical": 200,
+            },
+            "maintainability": {
+                "excellent": 85,
+                "good": 70,
+                "fair": 50,
+                "poor": 25,
+            },
         }
 
         # Apply strict thresholds if requested
@@ -558,9 +597,10 @@ class ComplexityAnalyzer:
         lines = source.split("\n")
         metrics.lines_of_code = len(lines)
         metrics.logical_lines_of_code = len(
-            [l for l in lines if l.strip() and not l.strip().startswith("#")],
-        )
-        metrics.comment_lines = len([l for l in lines if l.strip().startswith("#")])
+            [l
+             for l in lines if l.strip() and not l.strip().startswith("#")], )
+        metrics.comment_lines = len(
+            [l for l in lines if l.strip().startswith("#")], )
         metrics.blank_lines = len([l for l in lines if not l.strip()])
         metrics.comment_ratio = metrics.comment_lines / max(
             metrics.logical_lines_of_code,
@@ -588,9 +628,11 @@ class ComplexityAnalyzer:
         # Cyclomatic complexity
         cc_visitor = radon_cc.ComplexityVisitor.from_code(source)
         if cc_visitor.complexity:
-            # radon returns list of complexities, take the first (main function)
+            # radon returns list of complexities, take the first (main
+            # function)
             complexities = [c.complexity for c in cc_visitor.complexity]
-            metrics.cyclomatic_complexity = max(complexities) if complexities else 1
+            metrics.cyclomatic_complexity = (max(complexities, )
+                                             if complexities else 1)
 
         # Halstead metrics
         h_visitor = HalsteadVisitor.from_code(source)
@@ -612,7 +654,10 @@ class ComplexityAnalyzer:
 
         # Maintainability index
         try:
-            metrics.maintainability_index = radon_metrics.mi_visit(source, multi=False)
+            metrics.maintainability_index = radon_metrics.mi_visit(
+                source,
+                multi=False,
+            )
         except Exception:
             metrics.maintainability_index = 50.0  # Default value
 
@@ -639,25 +684,27 @@ class ComplexityAnalyzer:
         metrics.function_calls = analyzer.function_calls
 
         # Estimate maintainability index
-        metrics.maintainability_index = self._estimate_maintainability_index(metrics)
+        metrics.maintainability_index = self._estimate_maintainability_index(
+            metrics, )
 
         return metrics
 
-    def _estimate_maintainability_index(self, metrics: ComplexityMetrics) -> float:
+    def _estimate_maintainability_index(
+        self,
+        metrics: ComplexityMetrics,
+    ) -> float:
         """Estimate maintainability index without radon."""
         # Simplified MI calculation based on available metrics
-        # Real MI = 171 - 5.2 * ln(Halstead Volume) - 0.23 * (Cyclomatic Complexity) - 16.2 * ln(Lines of Code)
+        # Real MI = 171 - 5.2 * ln(Halstead Volume) - 0.23 * (Cyclomatic
+        # Complexity) - 16.2 * ln(Lines of Code)
 
         # Use approximations
         volume_estimate = metrics.logical_lines_of_code * 2  # Rough estimate
 
         if volume_estimate > 0 and metrics.lines_of_code > 0:
-            mi = (
-                171
-                - 5.2 * math.log(volume_estimate)
-                - 0.23 * metrics.cyclomatic_complexity
-                - 16.2 * math.log(metrics.lines_of_code)
-            )
+            mi = (171 - 5.2 * math.log(volume_estimate) -
+                  0.23 * metrics.cyclomatic_complexity -
+                  16.2 * math.log(metrics.lines_of_code))
         else:
             mi = 50.0  # Default value
 
@@ -669,11 +716,14 @@ class ComplexityAnalyzer:
         score = 0
 
         # Cyclomatic complexity scoring (25 points)
-        if metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"]["low"]:
+        if metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"][
+                "low"]:
             score += 25
-        elif metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"]["medium"]:
+        elif metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"][
+                "medium"]:
             score += 20
-        elif metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"]["high"]:
+        elif metrics.cyclomatic_complexity <= self.thresholds["cyclomatic"][
+                "high"]:
             score += 10
         else:
             score += 0
@@ -681,26 +731,24 @@ class ComplexityAnalyzer:
         # Cognitive complexity scoring (25 points)
         if metrics.cognitive_complexity <= self.thresholds["cognitive"]["low"]:
             score += 25
-        elif metrics.cognitive_complexity <= self.thresholds["cognitive"]["medium"]:
+        elif metrics.cognitive_complexity <= self.thresholds["cognitive"][
+                "medium"]:
             score += 20
-        elif metrics.cognitive_complexity <= self.thresholds["cognitive"]["high"]:
+        elif metrics.cognitive_complexity <= self.thresholds["cognitive"][
+                "high"]:
             score += 10
         else:
             score += 0
 
         # Maintainability index scoring (25 points)
-        if (
-            metrics.maintainability_index
-            >= self.thresholds["maintainability"]["excellent"]
-        ):
+        if (metrics.maintainability_index
+                >= self.thresholds["maintainability"]["excellent"]):
             score += 25
-        elif (
-            metrics.maintainability_index >= self.thresholds["maintainability"]["good"]
-        ):
+        elif (metrics.maintainability_index
+              >= self.thresholds["maintainability"]["good"]):
             score += 20
-        elif (
-            metrics.maintainability_index >= self.thresholds["maintainability"]["fair"]
-        ):
+        elif (metrics.maintainability_index
+              >= self.thresholds["maintainability"]["fair"]):
             score += 10
         else:
             score += 0
@@ -727,7 +775,10 @@ class ComplexityAnalyzer:
         else:
             return ComplexityGrade.F
 
-    def _calculate_grade_breakdown(self, metrics: ComplexityMetrics) -> dict[str, str]:
+    def _calculate_grade_breakdown(
+        self,
+        metrics: ComplexityMetrics,
+    ) -> dict[str, str]:
         """Calculate grade breakdown by complexity type."""
         breakdown = {}
 
@@ -767,23 +818,24 @@ class ComplexityAnalyzer:
         # Cyclomatic complexity contribution (0-25)
         cc_risk = min(
             25,
-            (metrics.cyclomatic_complexity / self.thresholds["cyclomatic"]["critical"])
-            * 25,
+            (metrics.cyclomatic_complexity /
+             self.thresholds["cyclomatic"]["critical"]) * 25,
         )
         risk += cc_risk
 
         # Cognitive complexity contribution (0-25)
         cog_risk = min(
             25,
-            (metrics.cognitive_complexity / self.thresholds["cognitive"]["critical"])
-            * 25,
+            (metrics.cognitive_complexity /
+             self.thresholds["cognitive"]["critical"]) * 25,
         )
         risk += cog_risk
 
         # Nesting depth contribution (0-25)
         nest_risk = min(
             25,
-            (metrics.nesting_depth / self.thresholds["nesting"]["critical"]) * 25,
+            (metrics.nesting_depth / self.thresholds["nesting"]["critical"]) *
+            25,
         )
         risk += nest_risk
 
@@ -793,7 +845,10 @@ class ComplexityAnalyzer:
 
         return min(100.0, risk)
 
-    def _calculate_testability_score(self, metrics: ComplexityMetrics) -> float:
+    def _calculate_testability_score(
+        self,
+        metrics: ComplexityMetrics,
+    ) -> float:
         """Calculate how easy the function is to test (0-100)."""
         score = 100.0
 
@@ -813,42 +868,38 @@ class ComplexityAnalyzer:
         """Generate actionable refactoring suggestions."""
         suggestions = []
 
-        if metrics.cyclomatic_complexity > self.thresholds["cyclomatic"]["medium"]:
+        if metrics.cyclomatic_complexity > self.thresholds["cyclomatic"][
+                "medium"]:
             suggestions.append(
-                "Reduce cyclomatic complexity by extracting methods or simplifying conditions",
-            )
+                "Reduce cyclomatic complexity by extracting methods or simplifying conditions", )
 
-        if metrics.cognitive_complexity > self.thresholds["cognitive"]["medium"]:
+        if metrics.cognitive_complexity > self.thresholds["cognitive"][
+                "medium"]:
             suggestions.append(
-                "Reduce cognitive complexity by simplifying nested logic and conditions",
-            )
+                "Reduce cognitive complexity by simplifying nested logic and conditions", )
 
         if metrics.nesting_depth > self.thresholds["nesting"]["medium"]:
             suggestions.append(
-                "Reduce nesting depth using early returns or guard clauses",
-            )
+                "Reduce nesting depth using early returns or guard clauses", )
 
         if metrics.parameter_count > self.thresholds["parameters"]["medium"]:
             suggestions.append(
-                "Reduce parameter count by using parameter objects or configuration classes",
-            )
+                "Reduce parameter count by using parameter objects or configuration classes", )
 
         if metrics.lines_of_code > self.thresholds["length"]["medium"]:
             suggestions.append(
-                "Function is too long - extract smaller, focused methods",
-            )
+                "Function is too long - extract smaller, focused methods", )
 
         if metrics.return_count > 5:
             suggestions.append(
-                "Too many return statements - consider using a single exit point",
-            )
+                "Too many return statements - consider using a single exit point", )
 
         if metrics.comment_ratio < 0.05:
             suggestions.append(
-                "Add comments to explain complex logic and business rules",
-            )
+                "Add comments to explain complex logic and business rules", )
 
-        if metrics.maintainability_index < self.thresholds["maintainability"]["fair"]:
+        if metrics.maintainability_index < self.thresholds["maintainability"][
+                "fair"]:
             suggestions.append(
                 "Low maintainability - consider major refactoring or redesign",
             )
@@ -863,6 +914,7 @@ class ComplexityAnalyzer:
         """Find specific complexity hotspots in the code."""
 
         class HotspotFinder(ast.NodeVisitor):
+
             def __init__(self):
                 self.hotspots = []
                 self.nesting_level = 0
@@ -878,8 +930,7 @@ class ComplexityAnalyzer:
                                 description=f"Complex boolean condition with {len(node.test.values)} parts",
                                 severity="medium",
                                 suggestion="Break complex condition into smaller, named boolean variables",
-                            ),
-                        )
+                            ), )
 
                 self.nesting_level += 1
                 if self.nesting_level > 4:
@@ -887,7 +938,8 @@ class ComplexityAnalyzer:
                         ComplexityHotspot(
                             type="deep_nesting",
                             line_number=node.lineno,
-                            description=f"Deep nesting level: {self.nesting_level}",
+                            description=f"Deep nesting level: {
+                                self.nesting_level}",
                             severity="high",
                             suggestion="Use early returns or extract methods to reduce nesting",
                         ),
@@ -900,7 +952,10 @@ class ComplexityAnalyzer:
                 # Check for nested loops
                 self.nesting_level += 1
                 for child in ast.walk(node):
-                    if isinstance(child, (ast.For, ast.While)) and child != node:
+                    if (isinstance(
+                        child,
+                            (ast.For, ast.While),
+                    ) and child != node):
                         self.hotspots.append(
                             ComplexityHotspot(
                                 type="nested_loop",
@@ -908,8 +963,7 @@ class ComplexityAnalyzer:
                                 description="Nested loop detected",
                                 severity="high",
                                 suggestion="Consider using list comprehensions or extracting inner loop",
-                            ),
-                        )
+                            ), )
                         break
 
                 self.generic_visit(node)
@@ -923,11 +977,14 @@ class ComplexityAnalyzer:
         """Check which complexity thresholds were exceeded."""
         exceeded = []
 
-        if metrics.cyclomatic_complexity > self.thresholds["cyclomatic"]["high"]:
-            exceeded.append(f"cyclomatic_complexity ({metrics.cyclomatic_complexity})")
+        if metrics.cyclomatic_complexity > self.thresholds["cyclomatic"][
+                "high"]:
+            exceeded.append(
+                f"cyclomatic_complexity ({metrics.cyclomatic_complexity})", )
 
         if metrics.cognitive_complexity > self.thresholds["cognitive"]["high"]:
-            exceeded.append(f"cognitive_complexity ({metrics.cognitive_complexity})")
+            exceeded.append(
+                f"cognitive_complexity ({metrics.cognitive_complexity})", )
 
         if metrics.nesting_depth > self.thresholds["nesting"]["high"]:
             exceeded.append(f"nesting_depth ({metrics.nesting_depth})")
@@ -968,7 +1025,10 @@ class ManualComplexityAnalyzer(ast.NodeVisitor):
         self.branch_count += 1
 
         self.current_nesting_depth += 1
-        self.max_nesting_depth = max(self.max_nesting_depth, self.current_nesting_depth)
+        self.max_nesting_depth = max(
+            self.max_nesting_depth,
+            self.current_nesting_depth,
+        )
 
         self.generic_visit(node)
 
@@ -981,7 +1041,10 @@ class ManualComplexityAnalyzer(ast.NodeVisitor):
         self.loop_count += 1
 
         self.current_nesting_depth += 1
-        self.max_nesting_depth = max(self.max_nesting_depth, self.current_nesting_depth)
+        self.max_nesting_depth = max(
+            self.max_nesting_depth,
+            self.current_nesting_depth,
+        )
 
         self.generic_visit(node)
 
@@ -994,7 +1057,10 @@ class ManualComplexityAnalyzer(ast.NodeVisitor):
         self.loop_count += 1
 
         self.current_nesting_depth += 1
-        self.max_nesting_depth = max(self.max_nesting_depth, self.current_nesting_depth)
+        self.max_nesting_depth = max(
+            self.max_nesting_depth,
+            self.current_nesting_depth,
+        )
 
         self.generic_visit(node)
 

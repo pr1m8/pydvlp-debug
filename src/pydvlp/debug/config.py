@@ -14,10 +14,10 @@ from typing import Any
 
 
 def _parse_environment_from_env() -> Environment:
-    """Parse environment from HAIVE_ENV variable, handling file paths."""
-    env_var = os.getenv("HAIVE_ENV", "development")
+    """Parse environment from PYDVLP_ENV variable, handling file paths."""
+    env_var = os.getenv("PYDVLP_ENV", "development")
     if env_var.endswith(".env") or "/" in env_var:
-        # HAIVE_ENV is set to a file path, use default
+        # PYDVLP_ENV is set to a file path, use default
         env_name = "development"
     else:
         env_name = env_var
@@ -154,7 +154,7 @@ class DevConfig:
 
     # Performance settings
     production_safe: bool = field(
-        default_factory=lambda: os.getenv("HAIVE_ENV") == "production",
+        default_factory=lambda: os.getenv("PYDVLP_ENV") == "production",
     )
     trace_sampling_rate: float = 1.0
     profile_overhead_limit: float = 0.05
@@ -162,14 +162,14 @@ class DevConfig:
     # Storage settings
     storage_enabled: bool = True
     storage_backend: StorageBackend = StorageBackend.SQLITE
-    storage_path: str = ".haive_dev_data"
+    storage_path: str = ".pydvlp_debug_data"
     storage_config: dict[str, Any] = field(default_factory=dict)
 
     # Output settings
     use_rich: bool = True
     color_enabled: bool = True
     verbose: bool = field(
-        default_factory=lambda: os.getenv("HAIVE_DEBUG", "false").lower() == "true",
+        default_factory=lambda: os.getenv("PYDVLP_DEBUG", "false").lower() == "true",
     )
     log_level: LogLevel = LogLevel.INFO
 
@@ -216,22 +216,29 @@ class DevConfig:
 
     def _configure_for_production(self) -> None:
         """Configure for production environment with minimal overhead."""
-        self.trace_sampling_rate = 0.01  # 1% sampling
-        self.profile_enabled = False
-        self.benchmark_enabled = False
-        self.static_analysis_enabled = False
-        self.verbose = False
-        self.log_level = LogLevel.ERROR
-        self.storage_backend = StorageBackend.NONE
-        self.dashboard_enabled = False
+        # Only override if not explicitly set via environment
+        if os.getenv("PYDVLP_TRACE_SAMPLING_RATE") is None:
+            self.trace_sampling_rate = 0.01  # 1% sampling
+        if os.getenv("PYDVLP_PROFILE_ENABLED") is None:
+            self.profile_enabled = False
+        if os.getenv("PYDVLP_BENCHMARK_ENABLED") is None:
+            self.benchmark_enabled = False
+        if os.getenv("PYDVLP_STATIC_ANALYSIS_ENABLED") is None:
+            self.static_analysis_enabled = False
+        if os.getenv("PYDVLP_VERBOSE") is None:
+            self.verbose = False
+        if os.getenv("PYDVLP_LOG_LEVEL") is None:
+            self.log_level = LogLevel.ERROR
+        if os.getenv("PYDVLP_STORAGE_BACKEND") is None:
+            self.storage_backend = StorageBackend.NONE
+        if os.getenv("PYDVLP_DASHBOARD_ENABLED") is None:
+            self.dashboard_enabled = False
         self.auto_analyze = False
         self.runtime_type_check = False
 
     def _configure_for_testing(self) -> None:
         """Configure for testing environment with balanced features."""
         # Debug print
-        # print(f"DEBUG: _env_overrides = {self._env_overrides}")
-        # print(f"DEBUG: trace_sampling_rate in overrides? {'trace_sampling_rate' in self._env_overrides}")
 
         if "trace_sampling_rate" not in self._env_overrides:
             self.trace_sampling_rate = 0.1  # 10% sampling
@@ -244,7 +251,7 @@ class DevConfig:
         if "verbose" not in self._env_overrides:
             self.verbose = False
         # Don't override log_level if it was set via environment variable
-        if os.getenv("HAIVE_LOG_LEVEL") is None:
+        if os.getenv("PYDVLP_LOG_LEVEL") is None:
             self.log_level = LogLevel.WARNING
         self.storage_backend = StorageBackend.MEMORY
         self.dashboard_enabled = False
@@ -264,7 +271,7 @@ class DevConfig:
     def from_env(cls) -> DevConfig:
         """Create configuration from environment variables.
 
-        Reads configuration from environment variables with HAIVE_ prefix.
+        Reads configuration from environment variables with PYDVLP_ prefix.
         Provides a convenient way to configure the system through environment
         variables in containerized or CI/CD environments.
 
@@ -272,21 +279,21 @@ class DevConfig:
             DevConfig: Configuration instance populated from environment
 
         Environment Variables:
-            HAIVE_ENV: Runtime environment (development/testing/staging/production)
-            HAIVE_DEV_ENABLED: Enable development utilities (true/false)
-            HAIVE_DEBUG_ENABLED: Enable debug utilities (true/false)
-            HAIVE_LOG_ENABLED: Enable logging utilities (true/false)
-            HAIVE_TRACE_ENABLED: Enable tracing utilities (true/false)
-            HAIVE_PROFILE_ENABLED: Enable profiling utilities (true/false)
-            HAIVE_BENCHMARK_ENABLED: Enable benchmarking utilities (true/false)
-            HAIVE_STATIC_ANALYSIS_ENABLED: Enable static analysis (true/false)
-            HAIVE_TRACE_SAMPLING_RATE: Trace sampling rate (0.0-1.0)
-            HAIVE_STORAGE_BACKEND: Storage backend (none/memory/sqlite/postgresql/file)
-            HAIVE_STORAGE_PATH: Path for file-based storage
-            HAIVE_LOG_LEVEL: Minimum logging level (TRACE/DEBUG/INFO/WARNING/ERROR)
-            HAIVE_DASHBOARD_ENABLED: Enable web dashboard (true/false)
-            HAIVE_DASHBOARD_PORT: Port for web dashboard (integer)
-            HAIVE_VERBOSE: Enable verbose output (true/false)
+            PYDVLP_ENV: Runtime environment (development/testing/staging/production)
+            PYDVLP_DEV_ENABLED: Enable development utilities (true/false)
+            PYDVLP_DEBUG_ENABLED: Enable debug utilities (true/false)
+            PYDVLP_LOG_ENABLED: Enable logging utilities (true/false)
+            PYDVLP_TRACE_ENABLED: Enable tracing utilities (true/false)
+            PYDVLP_PROFILE_ENABLED: Enable profiling utilities (true/false)
+            PYDVLP_BENCHMARK_ENABLED: Enable benchmarking utilities (true/false)
+            PYDVLP_STATIC_ANALYSIS_ENABLED: Enable static analysis (true/false)
+            PYDVLP_TRACE_SAMPLING_RATE: Trace sampling rate (0.0-1.0)
+            PYDVLP_STORAGE_BACKEND: Storage backend (none/memory/sqlite/postgresql/file)
+            PYDVLP_STORAGE_PATH: Path for file-based storage
+            PYDVLP_LOG_LEVEL: Minimum logging level (TRACE/DEBUG/INFO/WARNING/ERROR)
+            PYDVLP_DASHBOARD_ENABLED: Enable web dashboard (true/false)
+            PYDVLP_DASHBOARD_PORT: Port for web dashboard (integer)
+            PYDVLP_VERBOSE: Enable verbose output (true/false)
 
         Examples:
             Load from environment:
@@ -294,18 +301,18 @@ class DevConfig:
             .. code-block:: python
 
                 # Set environment variables
-                os.environ["HAIVE_ENV"] = "production"
-                os.environ["HAIVE_TRACE_SAMPLING_RATE"] = "0.01"
+                os.environ["PYDVLP_ENV"] = "production"
+                os.environ["PYDVLP_TRACE_SAMPLING_RATE"] = "0.01"
 
                 # Create config
                 config = DevConfig.from_env()
                 assert config.environment == Environment.PRODUCTION
                 assert config.trace_sampling_rate == 0.01
         """
-        # Get environment, handling case where HAIVE_ENV might be a file path
-        env_var = os.getenv("HAIVE_ENV", "development")
+        # Get environment, handling case where PYDVLP_ENV might be a file path
+        env_var = os.getenv("PYDVLP_ENV", "development")
         if env_var.endswith(".env") or "/" in env_var:
-            # HAIVE_ENV is set to a file path, use default
+            # PYDVLP_ENV is set to a file path, use default
             env_name = "development"
         else:
             env_name = env_var
@@ -321,63 +328,68 @@ class DevConfig:
             return value
 
         config = cls(
-            enabled=_track_env("HAIVE_DEV_ENABLED", "enabled", _env_bool, True),
+            enabled=_track_env("PYDVLP_DEV_ENABLED", "enabled", _env_bool, True),
             environment=Environment(env_name),
             debug_enabled=_track_env(
-                "HAIVE_DEBUG_ENABLED",
+                "PYDVLP_DEBUG_ENABLED",
                 "debug_enabled",
                 _env_bool,
                 True,
             ),
-            log_enabled=_track_env("HAIVE_LOG_ENABLED", "log_enabled", _env_bool, True),
+            log_enabled=_track_env(
+                "PYDVLP_LOG_ENABLED",
+                "log_enabled",
+                _env_bool,
+                True,
+            ),
             trace_enabled=_track_env(
-                "HAIVE_TRACE_ENABLED",
+                "PYDVLP_TRACE_ENABLED",
                 "trace_enabled",
                 _env_bool,
                 True,
             ),
             profile_enabled=_track_env(
-                "HAIVE_PROFILE_ENABLED",
+                "PYDVLP_PROFILE_ENABLED",
                 "profile_enabled",
                 _env_bool,
                 True,
             ),
             benchmark_enabled=_track_env(
-                "HAIVE_BENCHMARK_ENABLED",
+                "PYDVLP_BENCHMARK_ENABLED",
                 "benchmark_enabled",
                 _env_bool,
                 True,
             ),
             static_analysis_enabled=_track_env(
-                "HAIVE_STATIC_ANALYSIS_ENABLED",
+                "PYDVLP_STATIC_ANALYSIS_ENABLED",
                 "static_analysis_enabled",
                 _env_bool,
                 True,
             ),
             trace_sampling_rate=_track_env(
-                "HAIVE_TRACE_SAMPLING_RATE",
+                "PYDVLP_TRACE_SAMPLING_RATE",
                 "trace_sampling_rate",
                 _env_float,
                 1.0,
             ),
             storage_backend=StorageBackend(
-                os.getenv("HAIVE_STORAGE_BACKEND", "sqlite"),
+                os.getenv("PYDVLP_STORAGE_BACKEND", "sqlite"),
             ),
-            storage_path=os.getenv("HAIVE_STORAGE_PATH", ".haive_dev_data"),
-            log_level=LogLevel(os.getenv("HAIVE_LOG_LEVEL", "INFO")),
+            storage_path=os.getenv("PYDVLP_STORAGE_PATH", ".pydvlp_debug_data"),
+            log_level=LogLevel(os.getenv("PYDVLP_LOG_LEVEL", "INFO")),
             dashboard_enabled=_track_env(
-                "HAIVE_DASHBOARD_ENABLED",
+                "PYDVLP_DASHBOARD_ENABLED",
                 "dashboard_enabled",
                 _env_bool,
                 False,
             ),
             dashboard_port=_track_env(
-                "HAIVE_DASHBOARD_PORT",
+                "PYDVLP_DASHBOARD_PORT",
                 "dashboard_port",
                 _env_int,
                 8888,
             ),
-            verbose=_track_env("HAIVE_VERBOSE", "verbose", _env_bool, False),
+            verbose=_track_env("PYDVLP_VERBOSE", "verbose", _env_bool, False),
             _env_overrides=overrides,  # Pass overrides to constructor
         )
 

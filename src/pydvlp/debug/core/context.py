@@ -132,7 +132,7 @@ class DevContext:
             **kwargs: Additional context data
         """
         if config.debug_enabled:
-            from pydvlp.debug import debug
+            from pydvlp.debug.debug import debug
 
             debug.ice(
                 f"[{self.name}] {message}",

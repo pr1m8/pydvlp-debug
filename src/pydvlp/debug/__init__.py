@@ -79,7 +79,6 @@ from pydvlp.debug.tracing import trace
 if TYPE_CHECKING:
     pass
 
-
 # Create global instance
 debugkit = UnifiedDev()
 

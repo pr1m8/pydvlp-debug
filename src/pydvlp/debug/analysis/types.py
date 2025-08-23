@@ -37,10 +37,10 @@ except ImportError:
         from typing import get_args, get_origin  # Python 3.8+
     except ImportError:
 
-        def get_args(tp):
+        def get_args(tp: Any) -> tuple[Any, ...]:
             return getattr(tp, "__args__", ())
 
-        def get_origin(tp):
+        def get_origin(tp: Any) -> Any:
             return getattr(tp, "__origin__", None)
 
 
@@ -118,12 +118,12 @@ class TypeInfo:
     is_optional: bool = False
     is_generic: bool = False
     is_union: bool = False
-    generic_args: list[type[Any]] = None
-    union_types: list[type[Any]] = None
+    generic_args: list[type[Any]] | None = None
+    union_types: list[type[Any]] | None = None
     source_location: str | None = None
     complexity_level: TypeComplexity = TypeComplexity.SIMPLE
     type_string: str = ""
-    validation_errors: list[str] = None
+    validation_errors: list[str] | None = None
 
     def __post_init__(self) -> None:
         """Initialize computed fields after dataclass creation."""
@@ -250,17 +250,17 @@ class FunctionTypeAnalysis:
 
     function_name: str
     module_name: str | None = None
-    parameters: dict[str, TypeInfo] = None
+    parameters: dict[str, TypeInfo] | None = None
     return_type: TypeInfo | None = None
-    type_errors: list[str] = None
-    type_warnings: list[str] = None
+    type_errors: list[str] | None = None
+    type_warnings: list[str] | None = None
     type_coverage: float = 0.0
     return_type_coverage: bool = False
-    generic_types_used: list[str] = None
-    union_types_used: list[str] = None
+    generic_types_used: list[str] | None = None
+    union_types_used: list[str] | None = None
     type_complexity_score: float = 0.0
     type_safety_score: float = 0.0
-    recommendations: list[str] = None
+    recommendations: list[str] | None = None
     mypy_output: str = ""
     analysis_timestamp: str | None = None
 
@@ -518,7 +518,7 @@ class TypeAnalyzer:
             )
 
         # Run mypy analysis if available
-        type_errors = []
+        type_errors: list[str] = []
         mypy_output = ""
         if self.use_mypy:
             try:

@@ -235,7 +235,13 @@ class AnalysisResult:
             List[AnalysisFinding]: Critical and high severity findings
         """
         return [
-            f for f in self.findings if f.severity in [Severity.CRITICAL, Severity.HIGH]
+            f
+            for f in self.findings
+            if f.severity
+            in [
+                Severity.CRITICAL,
+                Severity.HIGH,
+            ]
         ]
 
 
@@ -319,9 +325,16 @@ class ToolAnalyzer:
             execution_time = time.time() - start_time
 
             # Parse output
-            findings = self._parse_output(result.stdout, result.stderr, file_path)
+            findings = self._parse_output(
+                result.stdout,
+                result.stderr,
+                file_path,
+            )
             metrics = self._extract_metrics(result.stdout, result.stderr)
-            suggestions = self._extract_suggestions(result.stdout, result.stderr)
+            suggestions = self._extract_suggestions(
+                result.stdout,
+                result.stderr,
+            )
 
             return AnalysisResult(
                 tool_name=self.tool_name,
@@ -465,15 +478,14 @@ class MypyAnalyzer(ToolAnalyzer):
             if not line:
                 continue
 
-            # Parse mypy output format: file:line: severity: message [error-code]
+            # Parse mypy output format: file:line: severity: message
             match = re.match(
                 r"^([^:]+):(\d+):(?:(\d+):)?\s*(error|warning|note):\s*(.*?)(?:\s*\[([^\]]+)\])?$",
                 line,
             )
             if match:
                 file_part, line_num, col_num, severity_str, message, error_code = (
-                    match.groups()
-                )
+                    match.groups())
 
                 # Map mypy severity to our severity
                 severity_map = {
@@ -486,7 +498,10 @@ class MypyAnalyzer(ToolAnalyzer):
                     AnalysisFinding(
                         tool_name=self.tool_name,
                         analysis_type=self.analysis_type,
-                        severity=severity_map.get(severity_str, Severity.MEDIUM),
+                        severity=severity_map.get(
+                            severity_str,
+                            Severity.MEDIUM,
+                        ),
                         message=message,
                         file_path=file_part,
                         line_number=int(line_num) if line_num else None,
@@ -533,7 +548,9 @@ class RadonAnalyzer(ToolAnalyzer):
                                 tool_name=self.tool_name,
                                 analysis_type=self.analysis_type,
                                 severity=severity,
-                                message=f"Function '{func_data['name']}' has high cyclomatic complexity: {complexity}",
+                                message=f"Function '{
+                                    func_data['name']
+                                }' has high cyclomatic complexity: {complexity}",
                                 file_path=file_path_key,
                                 line_number=func_data.get("lineno"),
                                 rule_id="high-complexity",
@@ -561,7 +578,9 @@ class RadonAnalyzer(ToolAnalyzer):
                 complexities.extend([f["complexity"] for f in functions])
 
             if complexities:
-                metrics["average_complexity"] = sum(complexities) / len(complexities)
+                metrics["average_complexity"] = sum(complexities) / len(
+                    complexities,
+                )
                 metrics["max_complexity"] = max(complexities)
                 metrics["min_complexity"] = min(complexities)
                 metrics["function_count"] = len(complexities)
@@ -596,7 +615,8 @@ class VultureAnalyzer(ToolAnalyzer):
             if not line:
                 continue
 
-            # Parse vulture output: file:line: unused variable 'name' (confidence: X%)
+            # Parse vulture output: file:line: unused variable 'name'
+            # (confidence: X%)
             match = re.match(
                 r"^([^:]+):(\d+):\s*(.*?)\s*\(confidence:\s*(\d+)%\)$",
                 line,
@@ -1028,7 +1048,8 @@ class StaticAnalysisOrchestrator:
             # Single file results
             lines.append("## File Analysis Results\n")
 
-            total_findings = sum(len(result.findings) for result in results.values())
+            total_findings = sum(len(result.findings)
+                                 for result in results.values())
             lines.append(f"**Total findings**: {total_findings}\n")
 
             for tool_name, result in results.items():
@@ -1036,7 +1057,9 @@ class StaticAnalysisOrchestrator:
 
                 if result.success:
                     lines.append("- **Status**: ✅ Success")
-                    lines.append(f"- **Execution time**: {result.execution_time:.3f}s")
+                    lines.append(
+                        f"- **Execution time**: {result.execution_time:.3f}s",
+                    )
                     lines.append(f"- **Findings**: {len(result.findings)}")
 
                     if result.findings:
@@ -1089,7 +1112,9 @@ class StaticAnalysisOrchestrator:
                             "execution_time": 0.0,
                         }
                     tool_summaries[tool_name]["files"] += 1
-                    tool_summaries[tool_name]["findings"] += len(result.findings)
+                    tool_summaries[tool_name]["findings"] += len(
+                        result.findings,
+                    )
                     tool_summaries[tool_name]["execution_time"] += result.execution_time
 
             lines.append("### Tool Summary\n")
@@ -1102,7 +1127,10 @@ class StaticAnalysisOrchestrator:
 
             # Top issues by file
             file_issues = [
-                (file_path, sum(len(r.findings) for r in file_results.values()))
+                (
+                    file_path,
+                    sum(len(r.findings) for r in file_results.values()),
+                )
                 for file_path, file_results in results.items()
             ]
             file_issues.sort(key=lambda x: x[1], reverse=True)

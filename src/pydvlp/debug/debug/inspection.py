@@ -31,7 +31,10 @@ class DebugInspector:
         if not self.debug_enabled:
             return {}
 
-        frame = inspect.currentframe().f_back
+        frame = inspect.currentframe()
+        if frame is None or frame.f_back is None:
+            return {}
+        frame = frame.f_back
         locals_dict = frame.f_locals.copy()
 
         # Filter out private variables
@@ -48,7 +51,10 @@ class DebugInspector:
         if not self.debug_enabled:
             return {}
 
-        frame = inspect.currentframe().f_back
+        frame = inspect.currentframe()
+        if frame is None or frame.f_back is None:
+            return {}
+        frame = frame.f_back
         globals_dict = frame.f_globals.copy()
 
         # Filter to only user-defined globals
@@ -65,7 +71,10 @@ class DebugInspector:
         if not self.debug_enabled:
             return {}
 
-        frame = inspect.currentframe().f_back
+        frame = inspect.currentframe()
+        if frame is None or frame.f_back is None:
+            return {}
+        frame = frame.f_back
         frame_info = inspect.getframeinfo(frame)
 
         return {

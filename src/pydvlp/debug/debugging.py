@@ -5,7 +5,7 @@ interactive debugging, decorators, and inspection utilities.
 
 Examples:
     Enhanced debugging (icecream replacement):
-        >>> from haive.core.utils.dev.debugging import debug
+        >>> from pydvlp.debug import debug
         >>> debug.ice("Hello", variable=42)
 
     Interactive debugging:

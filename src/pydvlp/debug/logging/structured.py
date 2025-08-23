@@ -69,7 +69,7 @@ class RichFormatter(logging.Formatter):
 class DevLogger:
     """Enhanced development logger with rich formatting and context."""
 
-    def __init__(self, name: str = "haive.dev"):
+    def __init__(self, name: str = "pydvlp.debug"):
         self.name = name
         self.console = Console() if HAS_RICH else None
         self.context_stack: list[dict[str, Any]] = []
@@ -107,7 +107,15 @@ class DevLogger:
         frame = inspect.currentframe()
         try:
             # Go back 3 frames: _get_caller_info -> log method -> actual caller
-            caller_frame = frame.f_back.f_back.f_back
+            if (
+                frame
+                and frame.f_back
+                and frame.f_back.f_back
+                and frame.f_back.f_back.f_back
+            ):
+                caller_frame = frame.f_back.f_back.f_back
+            else:
+                return {}
             if caller_frame:
                 return {
                     "file": Path(caller_frame.f_code.co_filename).name,
@@ -357,3 +365,16 @@ class DevLogger:
 
 # Create global log instance
 log = DevLogger()
+
+
+def get_logger(name: str, **kwargs) -> DevLogger:
+    """Get a logger instance with the specified name.
+
+    Args:
+        name: Logger name.
+        **kwargs: Additional arguments passed to DevLogger.
+
+    Returns:
+        DevLogger instance.
+    """
+    return DevLogger(name, **kwargs)

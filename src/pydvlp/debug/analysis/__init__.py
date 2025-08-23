@@ -15,13 +15,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pydvlp_debug.analysis.complexity import (
+    from pydvlp.debug.analysis.complexity import (
         ComplexityAnalyzer,
         ComplexityMetrics,
         ComplexityReport,
     )
-    from pydvlp_debug.analysis.static import AnalysisResult, StaticAnalysisOrchestrator
-    from pydvlp_debug.analysis.types import FunctionTypeAnalysis, TypeAnalyzer, TypeInfo
+    from pydvlp.debug.analysis.static import (
+        AnalysisResult,
+        StaticAnalysisOrchestrator,
+    )
+    from pydvlp.debug.analysis.types import (
+        FunctionTypeAnalysis,
+        TypeAnalyzer,
+        TypeInfo,
+    )
 
 # Analysis modules with lazy loading
 _type_analyzer: TypeAnalyzer | None = None
@@ -37,8 +44,7 @@ def get_type_analyzer() -> TypeAnalyzer:
     """
     global _type_analyzer
     if _type_analyzer is None:
-        from pydvlp_debug.analysis.types import TypeAnalyzer
-
+        from pydvlp.debug.analysis.types import TypeAnalyzer
         from pydvlp.debug.config import config
 
         _type_analyzer = TypeAnalyzer(

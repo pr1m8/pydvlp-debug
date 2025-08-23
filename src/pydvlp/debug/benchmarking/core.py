@@ -5,7 +5,7 @@ This module provides clean, focused tools for comprehensive performance testing.
 
 Examples:
     Basic timing benchmark:
-        >>> from haive.core.utils.dev.benchmarking import benchmark
+        >>> from pydvlp.debug.benchmarking import benchmark
         >>>
         >>> def my_function():
         ...     return sum(i**2 for i in range(1000))

@@ -167,7 +167,7 @@ class CallTracker:
         avg_duration = sum(durations) / len(durations) if durations else 0
         max_duration = max(durations) if durations else 0
 
-        function_counts = {}
+        function_counts: dict[str, int] = {}
         for call in self.calls:
             func_name = call.get("function", "unknown")
             function_counts[func_name] = function_counts.get(func_name, 0) + 1
@@ -243,7 +243,11 @@ class VariableTracker:
 
     def _get_caller_info(self) -> dict[str, Any]:
         """Get information about the caller."""
-        frame = inspect.currentframe().f_back.f_back
+        frame = inspect.currentframe()
+        if frame and frame.f_back and frame.f_back.f_back:
+            frame = frame.f_back.f_back
+        else:
+            return {}
         if frame:
             return {
                 "file": Path(frame.f_code.co_filename).name,
@@ -324,8 +328,12 @@ class TracingUtilities:
 
     def vars(self, **kwargs) -> None:
         """Track variable changes."""
-        frame = inspect.currentframe().f_back
-        local_vars = frame.f_locals
+        frame = inspect.currentframe()
+        if frame and frame.f_back:
+            frame = frame.f_back
+            local_vars = frame.f_locals
+        else:
+            return
 
         self.var_tracker.enable()
 

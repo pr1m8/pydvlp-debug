@@ -47,7 +47,10 @@ class EnhancedDebugger:
             return
 
         # Get caller information
-        frame = inspect.currentframe().f_back
+        frame = inspect.currentframe()
+        if frame is None or frame.f_back is None:
+            return
+        frame = frame.f_back
         filename = frame.f_code.co_filename
         line_number = frame.f_lineno
         function_name = frame.f_code.co_name

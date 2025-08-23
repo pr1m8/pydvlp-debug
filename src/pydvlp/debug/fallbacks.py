@@ -1,4 +1,5 @@
-"""Fallback implementations for development utilities when dependencies are
+"""Fallback implementations for development utilities when dependencies are.
+
 missing.
 
 This module provides minimal fallback implementations that allow the
@@ -17,7 +18,8 @@ from typing import Any
 
 
 class FallbackDebug:
-    """Minimal debug implementation when icecream and other debuggers are
+    """Minimal debug implementation when icecream and other debuggers are.
+
     unavailable.
 
     Provides basic debugging functionality using standard print statements
@@ -97,7 +99,10 @@ class FallbackDebug:
             try:
                 return func(*args, **kwargs)
             except Exception:
-                print("Exception occurred, starting debugger...", file=sys.stderr)
+                print(
+                    "Exception occurred, starting debugger...",
+                    file=sys.stderr,
+                )
                 import pdb
 
                 pdb.post_mortem()
@@ -179,9 +184,8 @@ class FallbackLog:
 
         context_parts = []
         for key, value in kwargs.items():
-            if (
-                key != "correlation_id"
-            ):  # Skip correlation_id as it's handled separately
+            if (key != "correlation_id"
+                    ):  # Skip correlation_id as it's handled separately
                 context_parts.append(f"{key}={value!r}")
 
         context_str = f" | {', '.join(context_parts)}" if context_parts else ""
@@ -328,11 +332,13 @@ class FallbackTrace:
                 return "result"
     """
 
-    def __init__(self):
+    def __init__(self, enabled: bool = True):
         """Initialize fallback tracer."""
         self._contexts: list[str] = []
         self._correlation_id: str | None = None
-        self.enabled = True
+        self.enabled = enabled
+        self._call_count = 0
+        self._trace_data: list[dict[str, Any]] = []
 
     def set_correlation_id(self, correlation_id: str) -> None:
         """Set correlation ID for distributed tracing.
@@ -355,7 +361,10 @@ class FallbackTrace:
         if self.enabled:
             context_path = " -> ".join(self._contexts)
             correlation = f"[{correlation_id}] " if correlation_id else ""
-            print(f"TRACE: {correlation}Push context: {context_path}", file=sys.stderr)
+            print(
+                f"TRACE: {correlation}Push context: {context_path}",
+                file=sys.stderr,
+            )
 
     def pop_context(self) -> None:
         """Pop the current tracing context."""
@@ -363,10 +372,10 @@ class FallbackTrace:
             context_name = self._contexts.pop()
 
             if self.enabled:
-                context_path = " -> ".join(self._contexts) if self._contexts else "root"
-                correlation = (
-                    f"[{self._correlation_id}] " if self._correlation_id else ""
-                )
+                context_path = (" -> ".join(self._contexts, )
+                                if self._contexts else "root")
+                correlation = (f"[{self._correlation_id}] "
+                               if self._correlation_id else "")
                 print(
                     f"TRACE: {correlation}Pop context: {context_name} -> {context_path}",
                     file=sys.stderr,
@@ -381,7 +390,8 @@ class FallbackTrace:
         """
         if self.enabled:
             correlation = f"[{self._correlation_id}] " if self._correlation_id else ""
-            context_path = " -> ".join(self._contexts) if self._contexts else "root"
+            context_path = (" -> ".join(self._contexts, )
+                            if self._contexts else "root")
             print(
                 f"TRACE: {correlation}{context_path}: {name} = {value!r}",
                 file=sys.stderr,
@@ -399,11 +409,14 @@ class FallbackTrace:
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            self._call_count += 1
             if self.enabled:
-                correlation = (
-                    f"[{self._correlation_id}] " if self._correlation_id else ""
+                correlation = (f"[{self._correlation_id}] "
+                               if self._correlation_id else "")
+                print(
+                    f"TRACE: {correlation}Calling {func.__name__}",
+                    file=sys.stderr,
                 )
-                print(f"TRACE: {correlation}Calling {func.__name__}", file=sys.stderr)
 
             start_time = time.time()
             try:
@@ -416,6 +429,14 @@ class FallbackTrace:
                         f"in {duration:.3f}s -> {type(result).__name__}",
                         file=sys.stderr,
                     )
+
+                # Track the call
+                self._trace_data.append(
+                    {
+                        "function": func.__name__,
+                        "duration": duration,
+                        "result_type": type(result).__name__,
+                    }, )
 
                 return result
             except Exception as e:
@@ -432,9 +453,60 @@ class FallbackTrace:
 
         return wrapper
 
+    def start(self) -> None:
+        """Start tracing."""
+        self.enabled = True
+        self._call_count = 0
+        if self.enabled:
+            print("TRACE: Tracing started", file=sys.stderr)
+
+    def stop(self) -> None:
+        """Stop tracing."""
+        if self.enabled:
+            print(
+                f"TRACE: Tracing stopped after {self._call_count} calls",
+                file=sys.stderr,
+            )
+        self.enabled = False
+
+    def clear(self) -> None:
+        """Clear trace data."""
+        self._call_count = 0
+        self._trace_data = []
+        self._contexts = []
+        if self.enabled:
+            print("TRACE: Trace data cleared", file=sys.stderr)
+
+    def get_report(self) -> dict[str, Any]:
+        """Get trace report.
+
+        Returns:
+            Report with tracing statistics
+        """
+        unique_functions = set()
+        for data in self._trace_data:
+            if "function" in data:
+                unique_functions.add(data["function"])
+
+        return {
+            "total_calls": self._call_count,
+            "unique_functions": len(unique_functions),
+            "call_graph": {},  # Simplified - no actual call graph
+        }
+
+    def __enter__(self) -> FallbackTrace:
+        """Enter tracing context."""
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit tracing context."""
+        self.stop()
+
 
 class FallbackProfile:
-    """Minimal profiling implementation when advanced profilers are
+    """Minimal profiling implementation when advanced profilers are.
+
     unavailable.
 
     Provides basic timing and memory profiling using standard Python
@@ -502,8 +574,10 @@ class FallbackProfile:
 
         if self.enabled:
             print(
-                f"PROFILE: {context['name']} completed in {stats['duration']:.3f}s "
-                f"(memory: {stats['memory_delta']:+.1f}MB)",
+                f"PROFILE: {
+                    context['name']} completed in {
+                    stats['duration']:.3f}s " f"(memory: {
+                    stats['memory_delta']:+.1f}MB)",
                 file=sys.stderr,
             )
 
@@ -564,13 +638,15 @@ class FallbackProfile:
             # Fallback to basic memory estimation
             import resource
 
-            return (
-                resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-            )  # KB to MB on Linux
+            return (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+                    )  # KB to MB on Linux
 
 
 class FallbackBenchmark:
-    """Minimal benchmarking implementation when advanced benchmarking tools are
+    """Minimal benchmarking implementation when advanced benchmarking tools.
+
+    are.
+
     unavailable.
 
     Provides basic performance measurement and comparison capabilities
@@ -712,16 +788,16 @@ class FallbackBenchmark:
             fastest = min(results.items(), key=lambda x: x[1]["average"])
             slowest = max(results.items(), key=lambda x: x[1]["average"])
 
-            speedup = (
-                slowest[1]["average"] / fastest[1]["average"]
-                if fastest[1]["average"] > 0
-                else float("inf")
-            )
+            speedup = (slowest[1]["average"] / fastest[1]["average"]
+                       if fastest[1]["average"] > 0 else float("inf"))
 
             print(
-                f"BENCHMARK: Fastest: {fastest[0]} ({fastest[1]['average']:.3f}s), "
-                f"Slowest: {slowest[0]} ({slowest[1]['average']:.3f}s), "
-                f"Speedup: {speedup:.2f}x",
+                f"BENCHMARK: Fastest: {
+                    fastest[0]} ({
+                    fastest[1]['average']:.3f}s), " f"Slowest: {
+                    slowest[0]} ({
+                    slowest[1]['average']:.3f}s), " f"Speedup: {
+                        speedup:.2f}x",
                 file=sys.stderr,
             )
 

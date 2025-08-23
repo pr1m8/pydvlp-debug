@@ -18,7 +18,7 @@ from pydvlp.debug.analysis import (
     get_static_orchestrator,
     get_type_analyzer,
 )
-from pydvlp.debug.config import config
+from pydvlp.debug.config import DevConfig, config
 from pydvlp.debug.core.context import DevContext
 
 if TYPE_CHECKING:
@@ -30,10 +30,7 @@ if TYPE_CHECKING:
         AnalysisResult,
         StaticAnalysisOrchestrator,
     )
-    from pydvlp.debug.analysis.types import (
-        FunctionTypeAnalysis,
-        TypeAnalyzer,
-    )
+    from pydvlp.debug.analysis.types import FunctionTypeAnalysis, TypeAnalyzer
 
 
 class CodeAnalysisReport:
@@ -108,9 +105,8 @@ class CodeAnalysisReport:
         static_score = 20.0
         if self.static_analysis:
             # Deduct points for findings
-            total_findings = sum(
-                len(result.findings) for result in self.static_analysis.values()
-            )
+            total_findings = sum(len(result.findings)
+                                 for result in self.static_analysis.values())
             static_score = max(0, 20 - (total_findings * 2))
 
         return type_score + complexity_score + static_score
@@ -127,7 +123,9 @@ class CodeAnalysisReport:
         recommendations.extend(self.type_analysis.recommendations)
 
         # Add complexity analysis recommendations
-        recommendations.extend(self.complexity_analysis.refactoring_suggestions)
+        recommendations.extend(
+            self.complexity_analysis.refactoring_suggestions,
+        )
 
         # Add static analysis recommendations
         for result in self.static_analysis.values():
@@ -325,7 +323,11 @@ class UnifiedDev:
                     # ... work ...
                     ctx.success("Registration complete")
         """
-        return DevContext(name, correlation_id=self._correlation_id, **metadata)
+        return DevContext(
+            name,
+            correlation_id=self._correlation_id,
+            **metadata,
+        )
 
     def analyze_code(self, func: Callable[..., Any]) -> CodeAnalysisReport:
         """Perform comprehensive code analysis on a function.
@@ -358,7 +360,10 @@ class UnifiedDev:
         # Check cache
         cache_key = (
             f"{func.__module__}.{func_name}"
-            if hasattr(func, "__module__")
+            if hasattr(
+                func,
+                "__module__",
+            )
             else func_name
         )
         if cache_key in self._analysis_cache:
@@ -407,9 +412,9 @@ class UnifiedDev:
         func: Callable | None = None,
         *,
         analyze: bool = False,
-        profile: bool = None,
-        trace: bool = None,
-        log: bool = None,
+        profile: bool | None = None,
+        trace: bool | None = None,
+        log: bool | None = None,
         **options: Any,
     ) -> Callable | Callable[[Callable], Callable]:
         """Decorator for comprehensive function instrumentation.
@@ -469,7 +474,9 @@ class UnifiedDev:
                     # Log analysis results if requested
                     if enable_log and analysis_report.combined_score < 70:
                         self.log.warning(
-                            f"Function {f.__name__} has low quality score: {analysis_report.combined_score:.1f}",
+                            f"Function {f.__name__} has low quality score: {
+                                analysis_report.combined_score:.1f
+                            }",
                             recommendations=analysis_report.recommendations[
                                 :3
                             ],  # Top 3
@@ -500,8 +507,13 @@ class UnifiedDev:
 
                     # Apply profiling
                     profiler_context = None
-                    if enable_profile and hasattr(self.profile, "start_context"):
-                        profiler_context = self.profile.start_context(func_name)
+                    if enable_profile and hasattr(
+                        self.profile,
+                        "start_context",
+                    ):
+                        profiler_context = self.profile.start_context(
+                            func_name,
+                        )
                         ctx.checkpoint("profile_start")
 
                     try:
@@ -529,8 +541,13 @@ class UnifiedDev:
 
                     finally:
                         # Stop profiling
-                        if profiler_context and hasattr(self.profile, "stop_context"):
-                            profile_stats = self.profile.stop_context(profiler_context)
+                        if profiler_context and hasattr(
+                            self.profile,
+                            "stop_context",
+                        ):
+                            profile_stats = self.profile.stop_context(
+                                profiler_context,
+                            )
                             ctx.record("profile_stats", profile_stats)
                             ctx.checkpoint("profile_complete")
 
