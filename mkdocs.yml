@@ -104,17 +104,17 @@ plugins:
 nav:
   - Home: index.md
   - Getting Started:
-      - guides/getting-started.md
-      - guides/configuration.md
-      - guides/best-practices.md
+      - Overview: guides/getting-started.md
+      - Configuration: guides/configuration.md
+      - Best Practices: guides/best-practices.md
   - API Reference:
-      - api/core.md
-      - api/debugging.md
-      - api/profiling.md
-      - api/analysis.md
-  - Development:
-      - Contributing: CONTRIBUTING.md
-      - Changelog: CHANGELOG.md
+      - Overview: api/index.md
+      - Core API: api/core.md
+      - Debugging API: api/debugging.md
+      - Profiling API: api/profiling.md
+      - Analysis API: api/analysis.md
+  - Contributing: CONTRIBUTING.md
+  - Changelog: CHANGELOG.md
 
 # Extra
 extra:

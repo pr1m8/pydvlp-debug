@@ -291,7 +291,7 @@ def analyze_my_code():
 ## Next Steps
 
 1. **Explore Examples**: Check the `examples/` directory for complete working examples
-2. **Read API Docs**: See the [API Reference](../api/) for detailed documentation
+2. **Read API Docs**: See the [API Reference](../api/index.md) for detailed documentation
 3. **Learn Best Practices**: Read the [Best Practices Guide](./best-practices.md)
 4. **Configure for Your Needs**: See the [Configuration Guide](./configuration.md)
 
