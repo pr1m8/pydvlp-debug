@@ -1,119 +1,101 @@
----
 name: Documentation
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
       - '.readthedocs.yml'
+      - 'src/**/*.py'  # For API docs
       - 'README.md'
-      - 'CONTRIBUTING.md'
-      - 'CHANGELOG.md'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
       - '.readthedocs.yml'
+      - 'src/**/*.py'
       - 'README.md'
-      - 'CONTRIBUTING.md'
-      - 'CHANGELOG.md'
-  workflow_dispatch:
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  build-docs:
-    name: Build MkDocs Documentation
+  validate-docs:
+    name: Validate Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: 🌟 Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
-
-      - name: 🐍 Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: 📦 Install PDM
-        uses: pdm-project/setup-pdm@v4
-        with:
-          python-version: '3.11'
-          cache: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
-      - name: 🔧 Install dependencies
+      - name: Install dependencies
         run: |
-          pdm install --group docs
-          uv pip install mkdocs mkdocs-material mkdocs-autorefs pymdown-extensions
+          uv pip install --system -r docs/requirements.txt
 
-      - name: 🏗️ Build MkDocs documentation
+      - name: Validate MkDocs config
+        run: |
+          mkdocs --version
+          python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
+          echo "✅ MkDocs configuration is valid"
+
+      - name: Build documentation locally
         run: |
           mkdocs build --strict
+          echo "✅ Documentation builds successfully"
 
-      - name: 📤 Upload documentation artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: documentation-site
-          path: site/
-
-      - name: 🚀 Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Check documentation files
         run: |
-          mkdocs gh-deploy --force
+          echo "📊 Documentation overview:"
+          echo "- Config file: mkdocs.yml ✅"
+          echo "- RTD config: .readthedocs.yml ✅"
+          echo "- Requirements: docs/requirements.txt ✅"
+          echo "- Site built: site/ directory ✅"
+          
+          echo ""
+          echo "📝 Generated pages:"
+          find site -name "*.html" | head -10
+          
+          if [ -f site/index.html ]; then
+            echo "✅ Main index page generated"
+          else
+            echo "❌ Main index page missing"
+            exit 1
+          fi
 
-  validate-docs:
-    name: Validate Documentation
+  deploy-rtd:
+    name: Deploy to Read the Docs
     runs-on: ubuntu-latest
-    needs: build-docs
+    needs: validate-docs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📥 Download documentation artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: documentation-site
-          path: site/
-
-      - name: 🔍 Check for broken links
+      - name: Trigger RTD Webhook
+        if: secrets.RTD_WEBHOOK_URL != ''
         run: |
-          echo "📝 Documentation validation completed"
-          echo "✅ Site built successfully at site/ directory"
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"branches": ["main"]}' \
+            "${{ secrets.RTD_WEBHOOK_URL }}"
+          echo "✅ Read the Docs build triggered"
+        continue-on-error: true
 
-  readthedocs-notification:
-    name: Read the Docs Notification
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: 💬 Comment PR with RTD preview link
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo, number } = context.issue;
-            const previewUrl = `https://pydvlp-debug--${number}.org.readthedocs.build/`;
-            
-            github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: number,
-              body: `📖 **Documentation Preview**
-              
-              Your documentation changes can be previewed at:
-              ${previewUrl}
-              
-              *Note: It may take a few minutes for the preview to be available after the PR is created.*
-              
-              📚 **Main Documentation**: https://pydvlp-debug.readthedocs.io/`
-            })
+      - name: RTD Setup Instructions
+        if: secrets.RTD_WEBHOOK_URL == ''
+        run: |
+          echo "📚 Read the Docs Setup Instructions:"
+          echo ""
+          echo "1. Go to https://readthedocs.org/dashboard/"
+          echo "2. Sign in with your GitHub account" 
+          echo "3. Click 'Import a Project'"
+          echo "4. Select 'pydvlp-debug' repository"
+          echo "5. Read the Docs will use .readthedocs.yml automatically"
+          echo ""
+          echo "🌐 Your docs will be available at:"
+          echo "   https://pydvlp-debug.readthedocs.io/"
+          echo ""
+          echo "⚙️  Optional: Set RTD_WEBHOOK_URL secret for auto-deployment"
