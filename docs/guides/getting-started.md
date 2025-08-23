@@ -1,311 +1,121 @@
-# Getting Started with PyDvlp Debug
+# Getting Started
 
-This guide will help you get up and running with PyDvlp Debug, a comprehensive Python development utilities library.
+Welcome to PyDvlp Debug! This guide will help you start using our Python development utilities in minutes.
 
-## Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- PDM (recommended) or pip
-
-### Basic Installation
-
-Using PDM (recommended):
-
-```bash
-pdm add pydvlp-debug
-```
-
-Using pip:
+## Quick Install
 
 ```bash
 pip install pydvlp-debug
 ```
 
-### Installation with Optional Dependencies
-
-For full functionality, install with all optional dependencies:
-
-```bash
-# All features
-pdm add "pydvlp-debug[all]"
-
-# Specific features
-pdm add "pydvlp-debug[analysis]"    # Code analysis tools
-pdm add "pydvlp-debug[profiling]"   # Advanced profiling
-pdm add "pydvlp-debug[tracing]"     # Execution tracing
-pdm add "pydvlp-debug[rich]"        # Rich console output
-```
-
-## First Steps
-
-### 1. Import the Library
-
-The main entry point is the `debugkit` object:
+## First Example
 
 ```python
 from pydvlp.debug import debugkit
-```
 
-You can also import specific modules:
-
-```python
-from pydvlp.debug import debug, profile, trace, benchmark, log
-```
-
-### 2. Basic Debugging
-
-Use the `ice()` method for enhanced debugging output:
-
-```python
-from pydvlp.debug import debug
-
-# Debug variables
+# Debug any value
 x = 42
-debug.ice(x)  # Output: 🔍 42
+debugkit.ice(x)  # Shows: x = 42
 
 # Debug multiple values
 name = "Alice"
-age = 30
-debug.ice(name, age)  # Output: 🔍 'Alice' | 30
-
-# Debug with labels
-debug.ice("User info", name=name, age=age)
-# Output: 🔍 User info | name='Alice' | age=30
+debugkit.ice(name, x)  # Shows: name = 'Alice', x = 42
 ```
 
-### 3. Using the Unified Interface
+## Core Features
 
-The `debugkit` object provides a unified interface for all tools:
+### 1. Smart Debugging
 
 ```python
-from pydvlp.debug import debugkit
+# Debug complex objects
+data = {"users": [{"name": "Alice", "age": 30}]}
+debugkit.ice(data)
 
-# Configure settings
+# Debug with context
+debugkit.ice("Processing user", id=123, status="active")
+```
+
+### 2. Performance Profiling
+
+```python
+# Profile any function
+@debugkit.instrument(profile=True)
+def slow_function():
+    time.sleep(0.1)
+    return "done"
+
+result = slow_function()
+# Shows: slow_function took 0.1s
+```
+
+### 3. Code Analysis
+
+```python
+# Analyze code quality
+def messy_function(x, y, z=None):
+    if x > 0:
+        if y > 0:
+            return x + y
+    return 0
+
+report = debugkit.analyze_code(messy_function)
+print(f"Code quality: {report.combined_score}/100")
+```
+
+## Common Patterns
+
+### Development Workflow
+
+```python
+# Configure for development
 debugkit.configure(
     debug_enabled=True,
     profile_enabled=True,
-    log_level="INFO"
+    log_level="DEBUG"
 )
 
-# Use integrated debugging
-value = debugkit.ice({"data": [1, 2, 3]})
-
-# Log messages
-debugkit.info("Application started")
-debugkit.success("Task completed", duration=1.23)
-debugkit.error("Connection failed", retry=3)
-```
-
-### 4. Context Management
-
-Use contexts to group related operations:
-
-```python
-with debugkit.context("user_registration") as ctx:
-    ctx.debug("Starting registration")
-
-    # Perform registration steps
-    user = create_user(data)
-    ctx.checkpoint("user_created")
-
-    send_welcome_email(user)
-    ctx.checkpoint("email_sent")
-
-    ctx.success("Registration complete", user_id=user.id)
-```
-
-### 5. Function Instrumentation
-
-Automatically add logging, profiling, and analysis to functions:
-
-```python
-@debugkit.instrument(profile=True, log=True)
-def process_data(items: list) -> dict:
-    """Process a list of items."""
-    result = {
-        "count": len(items),
-        "processed": [transform(item) for item in items]
-    }
-    return result
-
-# The function now automatically logs and profiles
-data = process_data([1, 2, 3, 4, 5])
-```
-
-## Configuration
-
-### Environment Variables
-
-PyDvlp Debug can be configured using environment variables:
-
-```bash
-# Enable/disable features
-export PYDVLP_ENABLED=true
-export PYDVLP_DEBUG_ENABLED=true
-export PYDVLP_PROFILE_ENABLED=false
-
-# Set environment
-export PYDVLP_ENVIRONMENT=development  # or testing, production
-
-# Configure logging
-export PYDVLP_LOG_LEVEL=INFO
-export PYDVLP_LOG_FORMAT=rich  # or json, plain
-```
-
-### Programmatic Configuration
-
-Configure at runtime:
-
-```python
-from pydvlp.debug import debugkit
-
-debugkit.configure(
-    enabled=True,
-    debug_enabled=True,
-    profile_enabled=True,
-    trace_enabled=False,
-    log_level="DEBUG",
-    environment="development"
-)
+# Use context for operations
+with debugkit.context("user_signup") as ctx:
+    ctx.debug("Validating email")
+    # ... your code ...
+    ctx.success("User created")
 ```
 
 ### Production Mode
 
-The library automatically optimizes for production:
-
 ```python
+# Set production environment
 import os
 os.environ["PYDVLP_ENVIRONMENT"] = "production"
 
 from pydvlp.debug import debugkit
-# Automatically configured with:
-# - Log level: ERROR
-# - Debug/trace/profile: disabled
-# - Minimal overhead
+# Automatically optimized - only errors logged
 ```
 
-## Common Use Cases
+## Installation Options
 
-### 1. Debugging a Complex Function
-
-```python
-from pydvlp.debug import debug
-
-def complex_algorithm(data, options):
-    debug.ice("Input", data_size=len(data), options=options)
-
-    # Step 1: Preprocessing
-    preprocessed = preprocess(data)
-    debug.ice("After preprocessing", size=len(preprocessed))
-
-    # Step 2: Main processing
-    if options.get('parallel'):
-        debug.ice("Using parallel processing")
-        result = parallel_process(preprocessed)
-    else:
-        debug.ice("Using sequential processing")
-        result = sequential_process(preprocessed)
-
-    debug.ice("Final result", result_size=len(result))
-    return result
+### Basic Install
+```bash
+pip install pydvlp-debug
 ```
 
-### 2. Performance Optimization
+### With Extra Features
+```bash
+# Rich console output
+pip install "pydvlp-debug[rich]"
 
-```python
-from pydvlp.debug import profile, benchmark
-
-# Profile to find bottlenecks
-@profile.profile_performance
-def current_implementation(data):
-    # ... existing code ...
-    pass
-
-# Benchmark alternatives
-@benchmark.measure(iterations=100)
-def optimized_version(data):
-    # ... optimized code ...
-    pass
-
-# Compare results
-benchmark.compare(
-    current_implementation,
-    optimized_version,
-    test_data=sample_data
-)
-```
-
-### 3. Production Debugging
-
-```python
-from pydvlp.debug import debugkit
-
-@debugkit.instrument(
-    profile=debugkit.config.profile_enabled,  # Controlled by env
-    log=True,
-    analyze=False  # Don't analyze in production
-)
-def production_endpoint(request):
-    """Production API endpoint with conditional instrumentation."""
-    try:
-        result = process_request(request)
-        debugkit.success("Request processed",
-                        request_id=request.id,
-                        duration=request.duration)
-        return result
-    except Exception as e:
-        debugkit.error("Request failed",
-                      request_id=request.id,
-                      error=str(e))
-        raise
-```
-
-### 4. Code Quality Analysis
-
-```python
-from pydvlp.debug import debugkit
-
-def analyze_my_code():
-    """Check code quality before committing."""
-    functions = [
-        process_user_data,
-        calculate_metrics,
-        generate_report
-    ]
-
-    for func in functions:
-        report = debugkit.analyze_code(func)
-        print(f"\n{func.__name__}:")
-        print(f"  Quality Score: {report.combined_score:.1f}/100")
-        print(f"  Complexity: {report.complexity_analysis.complexity_grade}")
-        print(f"  Type Coverage: {report.type_analysis.type_coverage:.1%}")
-
-        if report.recommendations:
-            print("  Recommendations:")
-            for rec in report.recommendations[:3]:
-                print(f"    - {rec}")
+# All features
+pip install "pydvlp-debug[all]"
 ```
 
 ## Next Steps
 
-1. **Explore Examples**: Check the `examples/` directory for complete working examples
-2. **Read API Docs**: See the [API Reference](../api/index.md) for detailed documentation
-3. **Learn Best Practices**: Read the [Best Practices Guide](./best-practices.md)
-4. **Configure for Your Needs**: See the [Configuration Guide](./configuration.md)
+- [Configuration Guide](configuration.md) - Customize PyDvlp Debug
+- [API Reference](../api/index.md) - Detailed documentation
+- [Best Practices](best-practices.md) - Tips and patterns
 
-## Getting Help
+## Need Help?
 
-- **Documentation**: Check the `docs/` directory
-- **Examples**: Look at the `examples/` directory
-- **Issues**: Report bugs on GitHub
-- **Community**: Join discussions on GitHub Discussions
-
-## Tips for Success
-
-1. **Start Simple**: Begin with basic debugging and gradually add more features
-2. **Use Contexts**: Group related operations for better organization
-3. **Configure Appropriately**: Different settings for development vs production
-4. **Measure Don't Guess**: Use profiling to find actual bottlenecks
-5. **Automate Quality**: Add code analysis to your CI/CD pipeline
+- 📖 Check our [examples](https://github.com/pr1m8/pydvlp-debug/tree/main/examples)
+- 🐛 Report issues on [GitHub](https://github.com/pr1m8/pydvlp-debug/issues)
+- 💬 Ask questions in [Discussions](https://github.com/pr1m8/pydvlp-debug/discussions)

@@ -242,4 +242,8 @@ exclude_lines = [
 ]
 
 [dependency-groups]
-dev = ["ipdb>=0.13.13", "pudb>=2025.1"]
+dev = [
+    "ipdb>=0.13.13",
+    "playwright>=1.48.0",
+    "pudb>=2025.1",
+]
