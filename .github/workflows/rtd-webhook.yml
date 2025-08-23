@@ -1,0 +1,50 @@
+---
+name: Trigger Read the Docs
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.readthedocs.yml'
+      - 'src/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  trigger-rtd:
+    name: Trigger Read the Docs Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔔 Trigger Read the Docs webhook
+        if: secrets.RTD_WEBHOOK_URL
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"branches": ["${{ github.ref_name }}"], "token": "${{ secrets.RTD_WEBHOOK_TOKEN }}"}' \
+            "${{ secrets.RTD_WEBHOOK_URL }}"
+        continue-on-error: true
+
+      - name: 📝 Manual RTD setup notice
+        if: success() && !secrets.RTD_WEBHOOK_URL
+        run: |
+          echo "::notice::Read the Docs webhook not configured yet."
+          echo "::notice::To set up automatic builds:"
+          echo "::notice::1. Go to https://readthedocs.org/dashboard/"
+          echo "::notice::2. Import this project: https://github.com/pr1m8/pydvlp-debug"
+          echo "::notice::3. Add webhook URL and token as repository secrets:"
+          echo "::notice::   - RTD_WEBHOOK_URL"
+          echo "::notice::   - RTD_WEBHOOK_TOKEN"
+          echo "::notice::Documentation will be available at: https://pydvlp-debug.readthedocs.io/"
+
+      - name: 📊 Repository info
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Event: ${{ github.event_name }}"

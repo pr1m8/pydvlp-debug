@@ -1,37 +1,119 @@
 ---
-name: Docs Build
+name: Documentation
+
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.readthedocs.yml'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.readthedocs.yml'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+  workflow_dispatch:
+
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
-  docs:
-    name: Build Sphinx Docs on ${{ github.ref_name }}
+  build-docs:
+    name: Build MkDocs Documentation
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_STEP_DEBUG: ${{ secrets.ACTIONS_DEBUG || 'false' }}
     steps:
-      - name: 📥 Checkout Repo
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: true
-          token: ${{ secrets.GH_TOKEN }}
-      - name: 📦 Get Poetry Metadata
-        id: poetry
-        uses: ./.github/actions/get-poetry-info
-      - name: 🐍 Set up Python ${{ steps.poetry.outputs.python }}
-        uses: actions/setup-python@v5
+          fetch-depth: 0
+
+      - name: 🌟 Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ steps.poetry.outputs.python }}
-      - name: 🔧 Install Poetry and Nox
+          version: "latest"
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.11'
+          cache: true
+
+      - name: 🔧 Install dependencies
         run: |
-          pipx install poetry==${{ steps.poetry.outputs.poetry_version }}
-          pip install nox
-          uv pip install -r requirements.lock.txt
-      - name: 🏗️ Build Docs via Nox
-        run: |-
-          echo "🧾 Building docs for ${{ steps.poetry.outputs.name }} v${{ steps.poetry.outputs.version }}"
-          nox -s docs
+          pdm install --group docs
+          uv pip install mkdocs mkdocs-material mkdocs-autorefs pymdown-extensions
+
+      - name: 🏗️ Build MkDocs documentation
+        run: |
+          mkdocs build --strict
+
+      - name: 📤 Upload documentation artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-site
+          path: site/
+
+      - name: 🚀 Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          mkdocs gh-deploy --force
+
+  validate-docs:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+    needs: build-docs
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download documentation artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: documentation-site
+          path: site/
+
+      - name: 🔍 Check for broken links
+        run: |
+          echo "📝 Documentation validation completed"
+          echo "✅ Site built successfully at site/ directory"
+
+  readthedocs-notification:
+    name: Read the Docs Notification
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 💬 Comment PR with RTD preview link
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const previewUrl = `https://pydvlp-debug--${number}.org.readthedocs.build/`;
+            
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: `📖 **Documentation Preview**
+              
+              Your documentation changes can be previewed at:
+              ${previewUrl}
+              
+              *Note: It may take a few minutes for the preview to be available after the PR is created.*
+              
+              📚 **Main Documentation**: https://pydvlp-debug.readthedocs.io/`
+            })

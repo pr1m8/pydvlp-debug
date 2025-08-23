@@ -1,0 +1,117 @@
+---
+name: Documentation Health Check
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Weekly on Monday at 8 AM UTC
+  workflow_dispatch:
+
+jobs:
+  check-docs-status:
+    name: Check Documentation Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔍 Check Read the Docs status
+        id: rtd-check
+        run: |
+          RTD_URL="https://pydvlp-debug.readthedocs.io/"
+          
+          # Check if RTD site is accessible
+          if curl -s --head "$RTD_URL" | head -n 1 | grep -q "200 OK"; then
+            echo "✅ Read the Docs site is live: $RTD_URL"
+            echo "rtd_status=live" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Read the Docs site is not accessible: $RTD_URL"
+            echo "rtd_status=down" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔍 Check GitHub Pages status
+        id: gh-pages-check
+        run: |
+          GH_PAGES_URL="https://pr1m8.github.io/pydvlp-debug/"
+          
+          # Check if GitHub Pages site is accessible
+          if curl -s --head "$GH_PAGES_URL" | head -n 1 | grep -q "200 OK"; then
+            echo "✅ GitHub Pages site is live: $GH_PAGES_URL"
+            echo "gh_pages_status=live" >> $GITHUB_OUTPUT
+          else
+            echo "❌ GitHub Pages site is not accessible: $GH_PAGES_URL"
+            echo "gh_pages_status=down" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Create status summary
+        run: |
+          echo "## 📚 Documentation Status Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|-----|" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.rtd-check.outputs.rtd_status }}" == "live" ]]; then
+            echo "| Read the Docs | ✅ Live | https://pydvlp-debug.readthedocs.io/ |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Read the Docs | ❌ Down | https://pydvlp-debug.readthedocs.io/ |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ steps.gh-pages-check.outputs.gh_pages_status }}" == "live" ]]; then
+            echo "| GitHub Pages | ✅ Live | https://pr1m8.github.io/pydvlp-debug/ |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| GitHub Pages | ❌ Down | https://pr1m8.github.io/pydvlp-debug/ |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Last checked: $(date -u)_" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚨 Create issue if sites are down
+        if: steps.rtd-check.outputs.rtd_status == 'down' || steps.gh-pages-check.outputs.gh_pages_status == 'down'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = '🚨 Documentation Sites Health Check Failed';
+            const body = `## Documentation Health Check Report
+            
+            The weekly documentation health check has detected issues:
+            
+            | Platform | Status |
+            |----------|--------|
+            | Read the Docs | ${{ steps.rtd-check.outputs.rtd_status == 'live' ? '✅ Live' : '❌ Down' }} |
+            | GitHub Pages | ${{ steps.gh-pages-check.outputs.gh_pages_status == 'live' ? '✅ Live' : '❌ Down' }} |
+            
+            ### Action Required
+            
+            ${{ steps.rtd-check.outputs.rtd_status == 'down' ? '- [ ] Check Read the Docs build status and configuration' : '' }}
+            ${{ steps.gh-pages-check.outputs.gh_pages_status == 'down' ? '- [ ] Check GitHub Pages deployment and settings' : '' }}
+            
+            ### Links
+            - [Read the Docs](https://pydvlp-debug.readthedocs.io/)
+            - [GitHub Pages](https://pr1m8.github.io/pydvlp-debug/)
+            - [RTD Dashboard](https://readthedocs.org/projects/pydvlp-debug/)
+            
+            _Automated health check triggered at: ${new Date().toISOString()}_
+            `;
+            
+            // Check if an issue already exists
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['documentation', 'bug'],
+              state: 'open'
+            });
+            
+            const existingIssue = issues.find(issue => issue.title.includes('Documentation Sites Health Check Failed'));
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['documentation', 'bug', 'automated']
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `## Updated Health Check Report\n\n${body}`
+              });
+            }
